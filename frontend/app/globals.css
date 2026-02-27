@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+@plugin "daisyui" {
+  themes: night;
+}
+
+:root {
+  --gold: #f5a623;
+  --gold-light: #ffc85c;
+  --gold-dark: #c47d0a;
+  --bg: #0a0a0f;
+  --bg2: #111118;
+  --bg3: #17171f;
+  --surface: #1e1e28;
+  --surface2: #25252f;
+  --text: #f0f0f5;
+  --text-muted: #8888a0;
+  --success: #22c55e;
+  --error: #ef4444;
+  --border: rgba(245, 166, 35, 0.12);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Syne', sans-serif;
+}
+
+.nav-logo {
+  font-family: 'Syne', sans-serif;
+  font-weight: 800;
+  font-size: 1.3rem;
+  color: var(--gold);
+  letter-spacing: -0.02em;
+  text-decoration: none;
+}
+
+.nav-logo span {
+  color: var(--text);
+}
+
+/* Améliorer la visibilité des checkboxes */
+input[type="checkbox"] {
+  accent-color: var(--gold);
+  width: 1rem;
+  height: 1rem;
+  cursor: pointer;
+  border: 2px solid rgba(245, 166, 35, 0.5);
+  border-radius: 0.35rem;
+  background-color: var(--surface);
+}
+
+input[type="checkbox"]:checked {
+  background-color: var(--gold);
+  border-color: var(--gold);
+}

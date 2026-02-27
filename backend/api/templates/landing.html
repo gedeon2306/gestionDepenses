@@ -1,0 +1,275 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Gestion de Dépenses API – Landing</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <link rel="stylesheet" href="{% static 'css/landing.css' %}">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Inter:wght@300;400;500;600&display=swap"
+    rel="stylesheet"
+  >
+</head>
+<body>
+  <header class="hero" id="top">
+    <div class="hero-overlay"></div>
+    <div class="hero-inner">
+      <div class="hero-badge">Depuis {% now "Y" %}</div>
+      <h1 class="hero-title">Gestion de Dépenses API</h1>
+      <p class="hero-subtitle">
+        Une API REST élégante pour suivre, analyser et maîtriser vos dépenses.
+      </p>
+
+      <div class="hero-actions">
+        <a href="#getting-started" class="btn primary">Commencer</a>
+        <a href="#endpoints" class="btn ghost">Voir les endpoints</a>
+      </div>
+
+      <div class="hero-meta">
+        <span>RESTful • JSON • Sécurisée</span>
+        <span>Conçue avec Django</span>
+      </div>
+    </div>
+  </header>
+
+  <nav class="top-nav">
+    <div class="nav-inner">
+      <a href="#top" class="nav-logo">GD API</a>
+      <div class="nav-links">
+        <a href="#getting-started">Guide rapide</a>
+        <a href="#endpoints">Endpoints</a>
+        <a href="#examples">Exemples</a>
+      </div>
+    </div>
+  </nav>
+
+  <main>
+    <section class="section" id="getting-started">
+      <div class="section-inner">
+        <h2>Prise en main</h2>
+        <p class="section-lead">
+          Connectez-vous à l’API en quelques lignes de code. Toutes les réponses
+          sont au format <strong>JSON</strong>.
+        </p>
+
+        <div class="card-grid">
+          <article class="card">
+            <h3>Base URL</h3>
+            <p>Utilisez cette base pour tous vos appels :</p>
+            <div class="code-line">
+              <code>{{ request.scheme }}://{{ request.get_host }}/api/</code>
+              <button class="copy-btn" data-copy="{{ request.scheme }}://{{ request.get_host }}/api/">
+                Copier
+              </button>
+            </div>
+          </article>
+
+          <article class="card">
+            <h3>Authentification</h3>
+            <p>
+              Exemple avec token Bearer (à adapter selon ton implémentation) :
+            </p>
+            <pre class="code-block"><code>Authorization: Bearer &lt;votre_token&gt;</code></pre>
+          </article>
+
+          <article class="card">
+            <h3>Formats de réponse</h3>
+            <p>Les endpoints renvoient un JSON cohérent :</p>
+            <pre class="code-block"><code>{
+  "status": "success",
+  "data": { ... },
+  "error": null
+}</code></pre>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section alt" id="endpoints">
+      <div class="section-inner">
+        <h2>Endpoints principaux</h2>
+        <p class="section-lead">
+          Voici les endpoints actuels de ton API.
+        </p>
+
+        <div class="endpoint-list">
+          <article class="endpoint-card">
+            <div class="endpoint-header">
+              <span class="method post">POST</span>
+              <code>/api/register/</code>
+            </div>
+            <p>Inscription d’un nouvel utilisateur.</p>
+            <pre class="code-block"><code>curl -X POST "{{ request.scheme }}://{{ request.get_host }}/api/register/" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "Alice",
+    "email": "alice@example.com",
+    "password": "motdepasse"
+  }'</code></pre>
+          </article>
+
+          <article class="endpoint-card">
+            <div class="endpoint-header">
+              <span class="method post">POST</span>
+              <code>/api/login/</code>
+            </div>
+            <p>Connexion et génération des tokens JWT (access + refresh).</p>
+            <pre class="code-block"><code>curl -X POST "{{ request.scheme }}://{{ request.get_host }}/api/login/" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "alice@example.com",
+    "password": "motdepasse"
+  }'</code></pre>
+          </article>
+
+          <article class="endpoint-card">
+            <div class="endpoint-header">
+              <span class="method post">POST</span>
+              <code>/api/token/refresh/</code>
+            </div>
+            <p>Rafraîchit le token d’accès à partir du refresh token.</p>
+            <pre class="code-block"><code>curl -X POST "{{ request.scheme }}://{{ request.get_host }}/api/token/refresh/" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "refresh": "&lt;refresh_token&gt;"
+  }'</code></pre>
+          </article>
+
+          <article class="endpoint-card">
+            <div class="endpoint-header">
+              <span class="method get">GET</span>
+              <span class="method post">POST</span>
+              
+            </div>
+            <div class="endpoint-header"><code>/api/transactions/</code></div>
+            <p>
+              Liste toutes les transactions de l’utilisateur connecté (<code>GET</code>)
+              et permet d’en créer de nouvelles (<code>POST</code>).
+            </p>
+            <pre class="code-block"><code>curl -X GET "{{ request.scheme }}://{{ request.get_host }}/api/transactions/" \
+  -H "Accept: application/json" \
+  -H "Authorization: Bearer &lt;access_token&gt;"</code></pre>
+            <pre class="code-block"><code>curl -X POST "{{ request.scheme }}://{{ request.get_host }}/api/transactions/" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer &lt;access_token&gt;" \
+  -d '{
+    "label": "Course",
+    "amount": 42.50,
+    "currency": "EUR",
+    "category": "Alimentation"
+  }'</code></pre>
+          </article>
+
+          <article class="endpoint-card">
+            <div class="endpoint-header">
+              <span class="method get">GET</span>
+              <span class="method">PUT</span>
+              <span class="method">DELETE</span>
+              
+            </div>
+            <div class="endpoint-header"><code>/api/transactions/&lt;uuid:pk&gt;/</code></div>
+            <p>
+              Récupère, modifie ou supprime une transaction spécifique appartenant à l’utilisateur connecté.
+            </p>
+            <pre class="code-block"><code>curl -X GET "{{ request.scheme }}://{{ request.get_host }}/api/transactions/123e4567-e89b-12d3-a456-426614174000/" \
+  -H "Accept: application/json" \
+  -H "Authorization: Bearer &lt;access_token&gt;"</code></pre>
+            <pre class="code-block"><code>curl -X PUT "{{ request.scheme }}://{{ request.get_host }}/api/transactions/123e4567-e89b-12d3-a456-426614174000/" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer &lt;access_token&gt;" \
+  -d '{
+    "label": "Course corrigée",
+    "amount": 40.00
+  }'</code></pre>
+            <pre class="code-block"><code>curl -X DELETE "{{ request.scheme }}://{{ request.get_host }}/api/transactions/123e4567-e89b-12d3-a456-426614174000/" \
+  -H "Authorization: Bearer &lt;access_token&gt;"</code></pre>
+          </article>
+
+          <article class="endpoint-card">
+            <div class="endpoint-header">
+              <span class="method get">GET</span>
+              <span class="method">PUT</span>
+              <code>/api/profile/</code>
+            </div>
+            <p>
+              Récupère les informations de l’utilisateur connecté (<code>GET</code>)
+              et permet de les mettre à jour partiellement (<code>PUT</code>).
+            </p>
+            <pre class="code-block"><code>curl -X GET "{{ request.scheme }}://{{ request.get_host }}/api/profile/" \
+  -H "Accept: application/json" \
+  -H "Authorization: Bearer &lt;access_token&gt;"</code></pre>
+            <pre class="code-block"><code>curl -X PUT "{{ request.scheme }}://{{ request.get_host }}/api/profile/" \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer &lt;access_token&gt;" \
+  -d '{
+    "name": "Nouveau Nom"
+  }'</code></pre>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="examples">
+      <div class="section-inner">
+        <h2>Exemples de code</h2>
+        <p class="section-lead">
+          Intégrez l’API dans vos projets front ou backend en quelques lignes.
+        </p>
+
+        <div class="tabs">
+          <button class="tab active" data-tab="js">JavaScript (fetch)</button>
+          <button class="tab" data-tab="python">Python (requests)</button>
+        </div>
+
+        <div class="tab-content active" id="tab-js">
+          <pre class="code-block"><code>async function getTransactions() {
+  const response = await fetch("{{ request.scheme }}://{{ request.get_host }}/api/transactions/", {
+    headers: {
+      "Accept": "application/json",
+      "Authorization": "Bearer &lt;access_token&gt;"
+    }
+  });
+
+  if (!response.ok) {
+    throw new Error("Erreur API");
+  }
+
+  const data = await response.json();
+  console.log(data);
+}</code></pre>
+        </div>
+
+        <div class="tab-content" id="tab-python">
+          <pre class="code-block"><code>import requests
+
+BASE_URL = "{{ request.scheme }}://{{ request.get_host }}/api/"
+
+def get_transactions(token):
+    headers = {
+        "Accept": "application/json",
+        "Authorization": f"Bearer {token}",
+    }
+    r = requests.get(BASE_URL + "transactions/", headers=headers)
+    r.raise_for_status()
+    print(r.json())</code></pre>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <span>Gestion de Dépenses API</span>
+      <span>Construit avec Django</span>
+    </div>
+  </footer>
+
+  <script src="{% static 'js/landing.js' %}"></script>
+</body>
+</html>
+
