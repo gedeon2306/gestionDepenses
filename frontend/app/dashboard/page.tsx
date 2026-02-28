@@ -176,7 +176,7 @@ export default function Home() {
           <span className="loading loading-spinner loading-xl"></span>
         </div> :
         <div className="flex justify-center p-4 sm:my-5">
-          <div className="w-full lg:w-2/3 flex flex-col gap-4">
+          <div className="w-full flex flex-col gap-4">
 
             {/* ── SOLDE / REVENUS / DÉPENSES ── */}
             <div className="flex flex-col sm:flex-row justify-between gap-6 rounded-2xl border-2 border-warning/10 border-dashed bg-warning/5 p-6 sm:p-8">
