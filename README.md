@@ -28,6 +28,8 @@ Application fullstack de gestion financière personnelle : suivi des revenus et 
 - **Profil utilisateur**
   - Consultation : `GET /api/profile/`
   - Modification (nom, email) : `PUT /api/profile/`
+  - Suppression du compte (nom, email) : `DELETE /api/profile/`
+  - Modification du mot de passe : `PUT /api/password/`
 - **Sécurité**
   - Authentification JWT sur toutes les routes protégées
   - Données filtrées par utilisateur (chaque user ne voit que ses transactions)

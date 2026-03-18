@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import register_user, transaction_detail, transaction_list, get_user_profile
+from .views import register_user, transaction_detail, transaction_list, get_user_profile, update_password
 from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
@@ -24,4 +24,7 @@ urlpatterns = [
 
     #Info utilisateur
     path('profile/', get_user_profile, name='user-profile'),
+
+    #Mot de passe
+    path('password/', update_password, name='update-password'),
 ]

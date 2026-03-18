@@ -32,9 +32,7 @@ async function refreshAccessToken(): Promise<string | null> {
   }
 }
 
-// ─────────────────────────────────────────────
-// Récupérer toutes les transactions
-// ─────────────────────────────────────────────
+
 export async function getTransactions() {
   const cookieStore = await cookies();
   const token = cookieStore.get('access_token')?.value;
@@ -61,9 +59,7 @@ export async function getTransactions() {
   }
 }
 
-// ─────────────────────────────────────────────
-// Ajouter une transaction
-// ─────────────────────────────────────────────
+
 export async function addTransaction(formData: FormData) {
   const cookieStore = await cookies();
   const token = cookieStore.get('access_token')?.value;
@@ -95,10 +91,7 @@ export async function addTransaction(formData: FormData) {
   }
 }
 
-// ─────────────────────────────────────────────
-// Supprimer une transaction
-// On passe l'id de la transaction à supprimer
-// ─────────────────────────────────────────────
+
 export async function deleteTransaction(id: string) {
   const cookieStore = await cookies();
   const token = cookieStore.get('access_token')?.value;
@@ -143,10 +136,7 @@ export async function deleteTransaction(id: string) {
   }
 }
 
-// ─────────────────────────────────────────────
-// Modifier une transaction
-// On passe l'id + les nouvelles données du formulaire
-// ─────────────────────────────────────────────
+
 export async function updateTransaction(id: string, formData: FormData) {
   const cookieStore = await cookies();
   const token = cookieStore.get('access_token')?.value;
@@ -179,9 +169,7 @@ export async function updateTransaction(id: string, formData: FormData) {
   }
 }
 
-// ─────────────────────────────────────────────
-// Récupérer le profil de l'utilisateur connecté
-// ─────────────────────────────────────────────
+
 export async function getUserProfile() {
   const cookieStore = await cookies();
   const token = cookieStore.get('access_token')?.value;
@@ -208,9 +196,7 @@ export async function getUserProfile() {
   }
 }
 
-// ─────────────────────────────────────────────
-// Modifier le profil de l'utilisateur connecté
-// ─────────────────────────────────────────────
+
 export async function updateUserProfile(formData: FormData) {
   const cookieStore = await cookies();
   const token = cookieStore.get('access_token')?.value;
@@ -238,6 +224,77 @@ export async function updateUserProfile(formData: FormData) {
       } catch { return null; }
     }
     console.error('Erreur modification profil:', error);
+    return null;
+  }
+}
+
+export async function deleteUserProfile() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get('access_token')?.value;
+  if (!token) return false;
+
+  const baseURL = process.env.API_URL || process.env.NEXT_PUBLIC_API_URL;
+  const url = `${baseURL}api/profile/`;
+
+  try {
+    const response = await fetch(url, {
+      method: 'DELETE',
+      headers: { Authorization: `Bearer ${token}` }
+    });
+
+    if (response.status === 204 || response.status === 200) {
+      return true;
+    }
+
+    if (response.status === 401) {
+      const newToken = await refreshAccessToken();
+      if (!newToken) return false;
+
+      const retryResponse = await fetch(url, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${newToken}` }
+      });
+
+      return retryResponse.status === 204 || retryResponse.status === 200;
+    }
+
+    console.error('Erreur suppression, status:', response.status);
+    return false;
+
+  } catch (error) {
+    console.error('Erreur suppression compte:', error);
+    return false;
+  }
+}
+
+
+export async function updatePassword(formData: FormData) {
+  const cookieStore = await cookies();
+  const token = cookieStore.get('access_token')?.value;
+  if (!token) return null;
+
+  const data = {
+    currentPassword: formData.get('currentPassword'),
+    newPassword: formData.get('newPassword'),
+  };
+
+  try {
+    const response = await api.put('password/', data, {
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
+    });
+    return response.data;
+  } catch (error: any) {
+    if (error?.response?.status === 401) {
+      const newToken = await refreshAccessToken();
+      if (!newToken) return null;
+      try {
+        const response = await api.put('password/', data, {
+          headers: { Authorization: `Bearer ${newToken}`, 'Content-Type': 'application/json' }
+        });
+        return response.data;
+      } catch { return null; }
+    }
+    console.error('Erreur modification mot de passe:', error);
     return null;
   }
 }

@@ -5,33 +5,68 @@ import { Activity, CircleArrowDown, CircleArrowUp, Plus, SquarePen, Trash2, Tren
 import { getTransactions, addTransaction, deleteTransaction, updateTransaction } from '@/src/app/actions/actions';
 import { useEffect, useState, useRef } from 'react';
 import toast from 'react-hot-toast';
+import { motion, AnimatePresence } from 'motion/react';
 
 export default function Home() {
+  // ─── toute la logique est identique à l'original ───
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [idDeleting, setIdDeleting] = useState('');
-
-  // Set des ids cochés (Set permet de vérifier/ajouter/supprimer en O(1))
   const [selected, setSelected] = useState<Set<string>>(new Set());
-
-  // true pendant une suppression en masse (sélection ou tout supprimer)
   const [isDeletingBulk, setIsDeletingBulk] = useState(false);
 
   const addModalRef = useRef<HTMLDialogElement>(null);
   const addFormRef = useRef<HTMLFormElement>(null);
   const editModalRef = useRef<HTMLDialogElement>(null);
   const editFormRef = useRef<HTMLFormElement>(null);
+  const deleteModalRef = useRef<HTMLDialogElement>(null);
   const [editingTransaction, setEditingTransaction] = useState<any>(null);
-
-  // Ref pour la checkbox "tout sélectionner" (état indeterminate)
   const selectAllRef = useRef<HTMLInputElement>(null);
+
+  // Delete modal state
+  type DeleteMode = 'single' | 'selected' | 'all';
+  const [deleteMode, setDeleteMode] = useState<DeleteMode>('single');
+  const [deletingTransaction, setDeletingTransaction] = useState<any>(null);
+
+  const openDeleteModal = (mode: DeleteMode, transaction?: any) => {
+    setDeleteMode(mode);
+    setDeletingTransaction(transaction ?? null);
+    deleteModalRef.current?.showModal();
+  };
+
+  const handleConfirmDelete = async () => {
+    deleteModalRef.current?.close();
+    if (deleteMode === 'single' && deletingTransaction) {
+      setIdDeleting(deletingTransaction.id);
+      const success = await deleteTransaction(deletingTransaction.id);
+      if (success) { toast.success('Transaction supprimée !'); await loadTransactions(); }
+      else toast.error('Erreur lors de la suppression.');
+      setIdDeleting('');
+    } else if (deleteMode === 'selected') {
+      setIsDeletingBulk(true);
+      const results = await Promise.all([...selected].map(id => deleteTransaction(id)));
+      setIsDeletingBulk(false);
+      const failures = results.filter(r => !r).length;
+      if (failures === 0) toast.success(`${selected.size} transaction(s) supprimée(s) !`);
+      else toast.error(`${failures} suppression(s) ont échoué.`);
+      await loadTransactions();
+    } else if (deleteMode === 'all') {
+      setIsDeletingBulk(true);
+      const results = await Promise.all(transactions.map(t => deleteTransaction(t.id)));
+      setIsDeletingBulk(false);
+      const failures = results.filter(r => !r).length;
+      if (failures === 0) toast.success('Toutes les transactions ont été supprimées !');
+      else toast.error(`${failures} suppression(s) ont échoué.`);
+      await loadTransactions();
+    }
+  };
 
   const loadTransactions = async () => {
     const data = await getTransactions();
     setTransactions(data);
     setLoading(false);
-    setSelected(new Set()); // On vide la sélection à chaque rechargement
+    setSelected(new Set());
   };
 
   useEffect(() => { loadTransactions(); }, []);
@@ -57,9 +92,6 @@ export default function Home() {
     });
   };
 
-  // ── SÉLECTION ──
-
-  // Cocher / décocher une ligne
   const toggleSelect = (id: string) => {
     setSelected(prev => {
       const next = new Set(prev);
@@ -69,64 +101,22 @@ export default function Home() {
     });
   };
 
-  // Cocher / décocher toutes les lignes
   const toggleSelectAll = () => {
-    if (selected.size === transactions.length) {
-      setSelected(new Set()); // tout décocher
-    } else {
-      setSelected(new Set(transactions.map(t => t.id))); // tout cocher
-    }
+    if (selected.size === transactions.length) setSelected(new Set());
+    else setSelected(new Set(transactions.map(t => t.id)));
   };
 
   const allSelected = transactions.length > 0 && selected.size === transactions.length;
   const someSelected = selected.size > 0 && selected.size < transactions.length;
 
-  // Met à jour l'état "indeterminate" de la checkbox (tiret = sélection partielle)
   useEffect(() => {
-    if (selectAllRef.current) {
-      selectAllRef.current.indeterminate = someSelected;
-    }
+    if (selectAllRef.current) selectAllRef.current.indeterminate = someSelected;
   }, [someSelected]);
 
-  // ── SUPPRESSION ──
-
-  const handleDelete = async (id: string) => {
-    setIdDeleting(id);
-    if (!confirm('Supprimer cette transaction ?')) { setIdDeleting(''); return; }
-    const success = await deleteTransaction(id);
-    if (success) { toast.success('Transaction supprimée !'); await loadTransactions(); }
-    else toast.error('Erreur lors de la suppression.');
-    setIdDeleting('');
-  };
-
-  // Supprimer uniquement les lignes cochées
-  const handleDeleteSelected = async () => {
-    if (selected.size === 0) return;
-    if (!confirm(`Supprimer les ${selected.size} transaction(s) sélectionnée(s) ?`)) return;
-    setIsDeletingBulk(true);
-    // Promise.all envoie toutes les requêtes DELETE en parallèle (plus rapide)
-    const results = await Promise.all([...selected].map(id => deleteTransaction(id)));
-    setIsDeletingBulk(false);
-    const failures = results.filter(r => !r).length;
-    if (failures === 0) toast.success(`${selected.size} transaction(s) supprimée(s) !`);
-    else toast.error(`${failures} suppression(s) ont échoué.`);
-    await loadTransactions();
-  };
-
-  // Supprimer absolument toutes les transactions
-  const handleDeleteAll = async () => {
-    if (transactions.length === 0) return;
-    if (!confirm(`Supprimer TOUTES les ${transactions.length} transactions ? Cette action est irréversible.`)) return;
-    setIsDeletingBulk(true);
-    const results = await Promise.all(transactions.map(t => deleteTransaction(t.id)));
-    setIsDeletingBulk(false);
-    const failures = results.filter(r => !r).length;
-    if (failures === 0) toast.success('Toutes les transactions ont été supprimées !');
-    else toast.error(`${failures} suppression(s) ont échoué.`);
-    await loadTransactions();
-  };
-
-  // ── AJOUT ──
+  // Ces handlers ouvrent maintenant le modal au lieu de confirm()
+  const handleDelete = (transaction: any) => openDeleteModal('single', transaction);
+  const handleDeleteSelected = () => { if (selected.size > 0) openDeleteModal('selected'); };
+  const handleDeleteAll = () => { if (transactions.length > 0) openDeleteModal('all'); };
 
   const handleAddTransaction = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -143,8 +133,6 @@ export default function Home() {
       toast.error("Erreur lors de l'ajout. Veuillez réessayer.");
     }
   };
-
-  // ── MODIFICATION ──
 
   const handleOpenEdit = (transaction: any) => {
     setEditingTransaction(transaction);
@@ -168,226 +156,500 @@ export default function Home() {
     }
   };
 
+  // ─── RENDU ───────────────────────────────────────────────
   return (
-    <div className="">
+    <div className="min-h-screen bg-[#0a0a0f] text-[#f0f0f5] font-['Syne',sans-serif]">
+      {/* Noise overlay */}
+      <div
+        className="fixed inset-0 pointer-events-none z-0 opacity-40"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E")`,
+        }}
+      />
+
       <Nav />
-      {loading ?
+
+      {loading ? (
         <div className="flex items-center justify-center min-h-screen">
-          <span className="loading loading-spinner loading-xl"></span>
-        </div> :
-        <div className="flex justify-center p-4 sm:my-5">
-          <div className="w-full flex flex-col gap-4">
-
-            {/* ── SOLDE / REVENUS / DÉPENSES ── */}
-            <div className="flex flex-col sm:flex-row justify-between gap-6 rounded-2xl border-2 border-warning/10 border-dashed bg-warning/5 p-6 sm:p-8">
-              <div className="flex flex-col items-center sm:items-start gap-1">
-                <div className="badge badge-soft"><Wallet className="w-4 h-4 mr-1" />Votre solde</div>
-                <div className="text-2xl md:text-3xl font-bold">{balance.toFixed(2)} f</div>
-              </div>
-              <div className="divider sm:hidden my-0 opacity-20"></div>
-              <div className="flex flex-col items-center sm:items-start gap-1">
-                <div className="badge badge-soft badge-success"><CircleArrowUp className="w-4 h-4 mr-1" />Revenus</div>
-                <div className="text-2xl md:text-3xl font-bold text-success">{income.toFixed(2)} f</div>
-              </div>
-              <div className="divider sm:hidden my-0 opacity-20"></div>
-              <div className="flex flex-col items-center sm:items-start gap-1">
-                <div className="badge badge-soft badge-error"><CircleArrowDown className="w-4 h-4 mr-1" />Dépenses</div>
-                <div className="text-2xl md:text-3xl font-bold text-error">{expense.toFixed(2)} f</div>
-              </div>
-            </div>
-
-            {/* ── BARRE DE PROGRESSION ── */}
-            <div className="rounded-2xl border-2 border-warning/10 border-dashed bg-warning/5 p-5">
-              <div className="flex justify-between items-center mb-1">
-                <div className="badge badge-soft badge-warning gap-1">
-                  <Activity className="w-4 h-4" />Dépenses par rapport aux Revenus
-                </div>
-                <div>{ratio.toFixed(0)}%</div>
-              </div>
-              <div className="progress progress-warning w-full">
-                <div
-                  className="h-full transition-all duration-1000 ease-in-out bg-warning"
-                  style={{ width: `${ratio}%` }}
-                />
-              </div>
-            </div>
-
-            {/* ── BOUTONS D'ACTION ── */}
-            <div className="flex flex-wrap gap-2">
-
-              {/* Ajouter une transaction */}
-              <button
-                className="btn btn-warning flex-1 min-w-fit"
-                onClick={() => addModalRef.current?.showModal()}
-              >
-                <Plus className="w-4 h-4" /> Ajouter une transaction
-              </button>
-
-              {/* Supprimer la sélection — apparaît seulement quand au moins 1 ligne est cochée */}
-              {selected.size > 0 && (
-                <button
-                  className="btn btn-error btn-soft"
-                  onClick={handleDeleteSelected}
-                  disabled={isDeletingBulk}
-                >
-                  {isDeletingBulk
-                    ? <span className="loading loading-spinner loading-sm" />
-                    : <Trash2 className="w-4 h-4" />}
-                  Supprimer la sélection ({selected.size})
-                </button>
-              )}
-
-              {/* Tout supprimer — apparaît seulement s'il y a des transactions */}
-              {transactions.length > 0 && (
-                <button
-                  className="btn btn-error"
-                  onClick={handleDeleteAll}
-                  disabled={isDeletingBulk}
-                >
-                  {isDeletingBulk
-                    ? <span className="loading loading-spinner loading-sm" />
-                    : <Trash2 className="w-4 h-4" />}
-                  Tout supprimer
-                </button>
-              )}
-            </div>
-
-            {/* ── TABLEAU DES TRANSACTIONS ── */}
-            <div className="overflow-x-auto rounded-2xl border-2 border-warning/10 border-dashed bg-warning/5">
-              <table className="table">
-                <thead>
-                  <tr>
-                    {/* Checkbox en-tête : coche/décoche tout, état indeterminate si sélection partielle */}
-                    <th>
-                      <input
-                        ref={selectAllRef}
-                        type="checkbox"
-                        className="checkbox checkbox-warning checkbox-sm"
-                        checked={allSelected}
-                        onChange={toggleSelectAll}
-                      />
-                    </th>
-                    <th>#</th>
-                    <th>Description</th>
-                    <th>Montant</th>
-                    <th>Date</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {transactions.length !== 0 ? (
-                    transactions.map((transaction, index) => (
-                      <tr
-                        key={transaction.id}
-                        className={selected.has(transaction.id) ? 'bg-warning/5' : ''}
-                      >
-                        {/* Checkbox individuelle par ligne */}
-                        <td>
-                          <input
-                            type="checkbox"
-                            className="checkbox checkbox-warning checkbox-sm"
-                            checked={selected.has(transaction.id)}
-                            onChange={() => toggleSelect(transaction.id)}
-                          />
-                        </td>
-                        <th>{index + 1}</th>
-                        <td>{transaction.text}</td>
-                        <td>
-                          <div className="flex items-center gap-1 font-semibold">
-                            {transaction.amount > 0
-                              ? <TrendingUp className="text-success w-6 h-6" />
-                              : <TrendingDown className="text-error w-6 h-6" />}
-                            {transaction.amount > 0 ? '+' : ''}{transaction.amount}
-                          </div>
-                        </td>
-                        <td>{formatDate(transaction.created_at)}</td>
-                        <td>
-                          <button
-                            className="btn btn-warning btn-sm btn-soft mr-2"
-                            onClick={() => handleOpenEdit(transaction)}
-                          >
-                            <SquarePen className="w-4 h-4" />
-                          </button>
-                          <button
-                            className="btn btn-error btn-sm btn-soft"
-                            onClick={() => handleDelete(transaction.id)}
-                            disabled={transaction.id === idDeleting}
-                          >
-                            {transaction.id === idDeleting
-                              ? <span className="loading loading-spinner loading-sm" />
-                              : <Trash2 className="w-4 h-4" />}
-                          </button>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr className="text-center text-sm">
-                      <td colSpan={6}>Aucune transaction trouvée.</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-
-            {/* ── MODAL AJOUT ── */}
-            <dialog ref={addModalRef} className="modal backdrop-blur">
-              <div className="modal-box">
-                <form method="dialog">
-                  <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
-                </form>
-                <h3 className="font-bold text-lg">Nouvelle transaction</h3>
-                <form ref={addFormRef} onSubmit={handleAddTransaction} className="flex flex-col gap-4 mt-4">
-                  <div className="flex flex-col gap-2">
-                    <label className="label">Description</label>
-                    <input type="text" name="text" className="input input-bordered w-full focus:input-warning" placeholder="Entrez la description" required />
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <label className="label">Montant</label>
-                    <input type="number" step="0.01" name="amount" className="input input-bordered w-full focus:input-warning" placeholder="Ex: -6500 (pour une depense)" required />
-                  </div>
-                  <button type="submit" disabled={isSubmitting} className="btn btn-soft btn-warning w-full">
-                    {isSubmitting ? <span className="loading loading-spinner loading-sm" /> : <Plus className="w-4 h-4" />}
-                    {isSubmitting ? 'Ajout en cours...' : 'Ajouter'}
-                  </button>
-                </form>
-              </div>
-            </dialog>
-
-            {/* ── MODAL MODIFICATION ── */}
-            <dialog ref={editModalRef} className="modal backdrop-blur">
-              <div className="modal-box">
-                <form method="dialog">
-                  <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
-                </form>
-                <h3 className="font-bold text-lg">Modifier : {editingTransaction?.text}</h3>
-                <form ref={editFormRef} onSubmit={handleUpdateTransaction} className="flex flex-col gap-4 mt-4">
-                  <div className="flex flex-col gap-2">
-                    <label className="label">Description</label>
-                    <input
-                      type="text" name="text" className="input input-bordered w-full focus:input-warning"
-                      defaultValue={editingTransaction?.text}
-                      key={editingTransaction?.id + '-text'} required
-                    />
-                  </div>
-                  <div className="flex flex-col gap-2">
-                    <label className="label">Montant</label>
-                    <input
-                      type="number" step="0.01" name="amount" className="input input-bordered w-full focus:input-warning"
-                      defaultValue={editingTransaction?.amount}
-                      key={editingTransaction?.id + '-amount'} required
-                    />
-                  </div>
-                  <button type="submit" disabled={isSubmitting} className="btn btn-soft btn-warning w-full">
-                    {isSubmitting ? <span className="loading loading-spinner loading-sm" /> : <SquarePen className="w-4 h-4" />}
-                    {isSubmitting ? 'Modification en cours...' : 'Modifier'}
-                  </button>
-                </form>
-              </div>
-            </dialog>
-
+          <div className="flex flex-col items-center gap-4">
+            <motion.div
+              className="w-10 h-10 rounded-full border-2 border-[#f5a623] border-t-transparent"
+              animate={{ rotate: 360 }}
+              transition={{ duration: 0.8, repeat: Infinity, ease: 'linear' }}
+            />
+            <span className="text-[#8888a0] text-sm tracking-widest uppercase">Chargement…</span>
           </div>
         </div>
-      }
+      ) : (
+        <motion.div
+          className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 py-8 flex flex-col gap-6"
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+        >
+
+          {/* ── STATS ─────────────────────────────────────── */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {[
+              {
+                icon: <Wallet className="w-5 h-5" />,
+                label: 'Votre solde',
+                value: `${balance.toFixed(2)} f`,
+                color: 'text-[#f5a623]',
+                border: 'border-[rgba(245,166,35,0.2)]',
+                bg: 'bg-[rgba(245,166,35,0.06)]',
+                iconBg: 'bg-[rgba(245,166,35,0.12)]',
+                iconColor: 'text-[#f5a623]',
+              },
+              {
+                icon: <CircleArrowUp className="w-5 h-5" />,
+                label: 'Revenus',
+                value: `+${income.toFixed(2)} f`,
+                color: 'text-[#22c55e]',
+                border: 'border-[rgba(34,197,94,0.2)]',
+                bg: 'bg-[rgba(34,197,94,0.06)]',
+                iconBg: 'bg-[rgba(34,197,94,0.12)]',
+                iconColor: 'text-[#22c55e]',
+              },
+              {
+                icon: <CircleArrowDown className="w-5 h-5" />,
+                label: 'Dépenses',
+                value: `${expense.toFixed(2)} f`,
+                color: 'text-[#ef4444]',
+                border: 'border-[rgba(239,68,68,0.2)]',
+                bg: 'bg-[rgba(239,68,68,0.06)]',
+                iconBg: 'bg-[rgba(239,68,68,0.12)]',
+                iconColor: 'text-[#ef4444]',
+              },
+            ].map((stat, i) => (
+              <motion.div
+                key={stat.label}
+                className={`rounded-2xl border ${stat.border} ${stat.bg} p-6 flex items-center gap-5 relative overflow-hidden`}
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, delay: i * 0.08 }}
+                whileHover={{ y: -2 }}
+              >
+                <div className={`w-12 h-12 rounded-xl ${stat.iconBg} flex items-center justify-center shrink-0 ${stat.iconColor}`}>
+                  {stat.icon}
+                </div>
+                <div>
+                  <div className="text-[#8888a0] text-xs uppercase tracking-widest mb-1">{stat.label}</div>
+                  <div className={`font-['Syne',sans-serif] font-extrabold text-xl md:text-xl ${stat.color}`}>
+                    {stat.value}
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* ── PROGRESS BAR ──────────────────────────────── */}
+          <motion.div
+            className="rounded-2xl border border-[rgba(245,166,35,0.12)] bg-[rgba(245,166,35,0.04)] p-5"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.25 }}
+          >
+            <div className="flex justify-between items-center mb-3">
+              <div className="flex items-center gap-2 text-[#8888a0] text-xs uppercase tracking-widest">
+                <Activity className="w-4 h-4 text-[#f5a623]" />
+                Dépenses par rapport aux Revenus
+              </div>
+              <div className="font-['Syne',sans-serif] font-bold text-[#f5a623] text-sm">{ratio.toFixed(0)}%</div>
+            </div>
+            <div className="h-2 bg-[#1e1e28] rounded-full overflow-hidden">
+              <motion.div
+                className="h-full bg-gradient-to-r from-[#c47d0a] to-[#f5a623] rounded-full"
+                initial={{ width: 0 }}
+                animate={{ width: `${ratio}%` }}
+                transition={{ duration: 1.2, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              />
+            </div>
+          </motion.div>
+
+          {/* ── ACTION BUTTONS ────────────────────────────── */}
+          <motion.div
+            className="flex flex-wrap gap-3"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.32 }}
+          >
+            <motion.button
+              className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-[#f5a623] text-black font-['DM_Sans',sans-serif] font-semibold text-sm
+                         hover:bg-[#ffc85c] hover:shadow-[0_6px_24px_rgba(245,166,35,0.35)] transition-all duration-200"
+              onClick={() => addModalRef.current?.showModal()}
+              whileHover={{ y: -1 }}
+              whileTap={{ scale: 0.97 }}
+            >
+              <Plus className="w-4 h-4" /> Ajouter une transaction
+            </motion.button>
+
+            <AnimatePresence>
+              {selected.size > 0 && (
+                <motion.button
+                  key="delete-selected"
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-[rgba(239,68,68,0.35)] bg-[rgba(239,68,68,0.08)] text-[#ef4444] font-['DM_Sans',sans-serif] font-semibold text-sm
+                             hover:bg-[rgba(239,68,68,0.16)] transition-all duration-200"
+                  onClick={handleDeleteSelected}
+                  disabled={isDeletingBulk}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  whileHover={{ y: -1 }}
+                  whileTap={{ scale: 0.97 }}
+                >
+                  {isDeletingBulk
+                    ? <motion.div className="w-4 h-4 rounded-full border-2 border-[#ef4444] border-t-transparent" animate={{ rotate: 360 }} transition={{ duration: 0.7, repeat: Infinity, ease: 'linear' }} />
+                    : <Trash2 className="w-4 h-4" />}
+                  Supprimer la sélection ({selected.size})
+                </motion.button>
+              )}
+            </AnimatePresence>
+
+            {transactions.length > 0 && (
+              <motion.button
+                className="flex items-center gap-2 px-5 py-2.5 rounded-full border border-[rgba(239,68,68,0.2)] bg-[rgba(239,68,68,0.05)] text-[#ef4444] font-['DM_Sans',sans-serif] font-medium text-sm
+                           hover:bg-[rgba(239,68,68,0.12)] transition-all duration-200"
+                onClick={handleDeleteAll}
+                disabled={isDeletingBulk}
+                whileHover={{ y: -1 }}
+                whileTap={{ scale: 0.97 }}
+              >
+                {isDeletingBulk
+                  ? <motion.div className="w-4 h-4 rounded-full border-2 border-[#ef4444] border-t-transparent" animate={{ rotate: 360 }} transition={{ duration: 0.7, repeat: Infinity, ease: 'linear' }} />
+                  : <Trash2 className="w-4 h-4" />}
+                Tout supprimer
+              </motion.button>
+            )}
+          </motion.div>
+
+          {/* ── TABLE ─────────────────────────────────────── */}
+          <motion.div
+            className="rounded-2xl border border-[rgba(245,166,35,0.12)] bg-[#111118] overflow-x-auto"
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.38 }}
+          >
+            <table className="w-full border-collapse">
+              <thead>
+                <tr className="border-b border-[rgba(245,166,35,0.1)] bg-[#0d0d14]">
+                  <th className="px-5 py-3.5 text-left w-10">
+                    <input
+                      ref={selectAllRef}
+                      type="checkbox"
+                      className="w-4 h-4 rounded accent-[#f5a623] cursor-pointer"
+                      checked={allSelected}
+                      onChange={toggleSelectAll}
+                    />
+                  </th>
+                  <th className="px-3 py-3.5 text-left text-[#8888a0] text-[0.65rem] uppercase tracking-widest font-medium w-10">#</th>
+                  <th className="px-3 py-3.5 text-left text-[#8888a0] text-[0.65rem] uppercase tracking-widest font-medium">Description</th>
+                  <th className="px-3 py-3.5 text-left text-[#8888a0] text-[0.65rem] uppercase tracking-widest font-medium whitespace-nowrap">Montant</th>
+                  <th className="px-3 py-3.5 text-left text-[#8888a0] text-[0.65rem] uppercase tracking-widest font-medium whitespace-nowrap">Date</th>
+                  <th className="px-5 py-3.5 text-left text-[#8888a0] text-[0.65rem] uppercase tracking-widest font-medium">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {transactions.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="py-16 text-center">
+                      <div className="flex flex-col items-center gap-3">
+                        <Wallet className="w-10 h-10 text-[#25252f]" />
+                        <span className="text-[#8888a0] text-sm">Aucune transaction trouvée.</span>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  transactions.map((transaction, index) => (
+                    <motion.tr
+                      key={transaction.id}
+                      layout
+                      initial={{ opacity: 0, x: -8 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: 8 }}
+                      transition={{ duration: 0.25, delay: index * 0.03 }}
+                      className={`border-b border-[rgba(255,255,255,0.03)] last:border-b-0 transition-colors duration-150
+                        ${selected.has(transaction.id) ? 'bg-[rgba(245,166,35,0.04)]' : 'hover:bg-[#17171f]'}`}
+                    >
+                      {/* Checkbox */}
+                      <td className="px-5 py-4 w-10">
+                        <input
+                          type="checkbox"
+                          className="w-4 h-4 rounded accent-[#f5a623] cursor-pointer"
+                          checked={selected.has(transaction.id)}
+                          onChange={() => toggleSelect(transaction.id)}
+                        />
+                      </td>
+
+                      {/* Index */}
+                      <td className="px-3 py-4 text-[#8888a0] text-xs font-mono w-10">
+                        {String(index + 1).padStart(2, '0')}
+                      </td>
+
+                      {/* Description */}
+                      <td className="px-3 py-4 text-[#f0f0f5] text-sm font-medium max-w-[200px] truncate">
+                        {transaction.text}
+                      </td>
+
+                      {/* Amount */}
+                      <td className="px-3 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-1.5 font-['Syne',sans-serif] font-bold text-sm">
+                          {transaction.amount > 0
+                            ? <TrendingUp className="w-4 h-4 text-[#22c55e]" />
+                            : <TrendingDown className="w-4 h-4 text-[#ef4444]" />}
+                          <span className={transaction.amount > 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}>
+                            {transaction.amount > 0 ? '+' : ''}{transaction.amount}
+                          </span>
+                        </div>
+                      </td>
+
+                      {/* Date */}
+                      <td className="px-3 py-4 text-[#8888a0] text-xs whitespace-nowrap">
+                        {formatDate(transaction.created_at)}
+                      </td>
+
+                      {/* Actions */}
+                      <td className="px-5 py-4 whitespace-nowrap">
+                        <div className="flex items-center gap-2">
+                          <motion.button
+                            className="w-8 h-8 rounded-lg bg-[rgba(245,166,35,0.1)] border border-[rgba(245,166,35,0.2)] flex items-center justify-center text-[#f5a623]
+                                       hover:bg-[rgba(245,166,35,0.2)] transition-colors duration-150"
+                            onClick={() => handleOpenEdit(transaction)}
+                            whileHover={{ scale: 1.08 }}
+                            whileTap={{ scale: 0.93 }}
+                          >
+                            <SquarePen className="w-3.5 h-3.5" />
+                          </motion.button>
+                          <motion.button
+                            className="w-8 h-8 rounded-lg bg-[rgba(239,68,68,0.08)] border border-[rgba(239,68,68,0.2)] flex items-center justify-center text-[#ef4444]
+                                       hover:bg-[rgba(239,68,68,0.18)] transition-colors duration-150 disabled:opacity-40"
+                            onClick={() => handleDelete(transaction)}
+                            disabled={transaction.id === idDeleting}
+                            whileHover={{ scale: 1.08 }}
+                            whileTap={{ scale: 0.93 }}
+                          >
+                            {transaction.id === idDeleting
+                              ? <motion.div className="w-3.5 h-3.5 rounded-full border-2 border-[#ef4444] border-t-transparent" animate={{ rotate: 360 }} transition={{ duration: 0.7, repeat: Infinity, ease: 'linear' }} />
+                              : <Trash2 className="w-3.5 h-3.5" />}
+                          </motion.button>
+                        </div>
+                      </td>
+                    </motion.tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </motion.div>
+        </motion.div>
+      )}
+
+      {/* ── MODAL AJOUT ─────────────────────────────────────── */}
+      <dialog ref={addModalRef} className="modal backdrop-blur-md">
+        <motion.div
+          className="modal-box bg-[#111118] border border-[rgba(245,166,35,0.15)] rounded-2xl p-8 max-w-md w-full shadow-[0_32px_64px_rgba(0,0,0,0.6)]"
+          initial={{ opacity: 0, scale: 0.95, y: 16 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.25 }}
+        >
+          <form method="dialog">
+            <button className="absolute right-5 top-5 w-8 h-8 rounded-lg bg-[#1e1e28] border border-[rgba(255,255,255,0.06)] flex items-center justify-center text-[#8888a0] hover:text-[#f0f0f5] transition-colors text-base leading-none">
+              ✕
+            </button>
+          </form>
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-xl bg-[rgba(245,166,35,0.12)] border border-[rgba(245,166,35,0.2)] flex items-center justify-center">
+              <Plus className="w-5 h-5 text-[#f5a623]" />
+            </div>
+            <h3 className="font-['Syne',sans-serif] font-bold text-lg text-[#f0f0f5]">Nouvelle transaction</h3>
+          </div>
+
+          <form ref={addFormRef} onSubmit={handleAddTransaction} className="flex flex-col gap-5">
+            <div className="flex flex-col gap-2">
+              <label className="text-[#8888a0] text-xs uppercase tracking-widest">Description</label>
+              <input
+                type="text" name="text" list="desc"
+                className="w-full bg-[#17171f] border border-[rgba(245,166,35,0.12)] rounded-xl px-4 py-3 text-sm text-[#f0f0f5] placeholder:text-[#8888a0]
+                           focus:outline-none focus:border-[#f5a623] focus:ring-1 focus:ring-[rgba(245,166,35,0.3)] transition-all duration-200"
+                placeholder="Ex : Salaire, Loyer…"
+                required
+              />
+              <datalist id="desc">
+                <option value="Salaire">Salaire</option>
+                <option value="Loyer">Loyer</option>
+                <option value="Cours">Cours</option>
+                <option value="Abonnement">Abonnement</option>
+              </datalist>
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-[#8888a0] text-xs uppercase tracking-widest">Montant</label>
+              <input
+                type="number" step="0.01" name="amount"
+                className="w-full bg-[#17171f] border border-[rgba(245,166,35,0.12)] rounded-xl px-4 py-3 text-sm text-[#f0f0f5] placeholder:text-[#8888a0]
+                           focus:outline-none focus:border-[#f5a623] focus:ring-1 focus:ring-[rgba(245,166,35,0.3)] transition-all duration-200"
+                placeholder="Ex : -6500 (dépense) ou 3500 (revenu)"
+                required
+              />
+            </div>
+            <motion.button
+              type="submit"
+              disabled={isSubmitting}
+              className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-[#f5a623] text-black font-['DM_Sans',sans-serif] font-semibold text-sm
+                         hover:bg-[#ffc85c] hover:shadow-[0_6px_24px_rgba(245,166,35,0.3)] transition-all duration-200 disabled:opacity-60"
+              whileHover={{ y: -1 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              {isSubmitting
+                ? <><motion.div className="w-4 h-4 rounded-full border-2 border-black border-t-transparent" animate={{ rotate: 360 }} transition={{ duration: 0.7, repeat: Infinity, ease: 'linear' }} /> Ajout en cours…</>
+                : <><Plus className="w-4 h-4" /> Ajouter</>}
+            </motion.button>
+          </form>
+        </motion.div>
+        <form method="dialog" className="modal-backdrop"><button>Fermer</button></form>
+      </dialog>
+
+      {/* ── MODAL MODIFICATION ──────────────────────────────── */}
+      <dialog ref={editModalRef} className="modal backdrop-blur-md">
+        <motion.div
+          className="modal-box bg-[#111118] border border-[rgba(245,166,35,0.15)] rounded-2xl p-8 max-w-md w-full shadow-[0_32px_64px_rgba(0,0,0,0.6)]"
+          initial={{ opacity: 0, scale: 0.95, y: 16 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.25 }}
+        >
+          <form method="dialog">
+            <button className="absolute right-5 top-5 w-8 h-8 rounded-lg bg-[#1e1e28] border border-[rgba(255,255,255,0.06)] flex items-center justify-center text-[#8888a0] hover:text-[#f0f0f5] transition-colors text-base leading-none">
+              ✕
+            </button>
+          </form>
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-xl bg-[rgba(245,166,35,0.12)] border border-[rgba(245,166,35,0.2)] flex items-center justify-center">
+              <SquarePen className="w-5 h-5 text-[#f5a623]" />
+            </div>
+            <div>
+              <h3 className="font-['Syne',sans-serif] font-bold text-lg text-[#f0f0f5]">Modifier</h3>
+              {editingTransaction?.text && (
+                <p className="text-[#8888a0] text-xs truncate max-w-[220px]">{editingTransaction.text}</p>
+              )}
+            </div>
+          </div>
+
+          <form ref={editFormRef} onSubmit={handleUpdateTransaction} className="flex flex-col gap-5">
+            <div className="flex flex-col gap-2">
+              <label className="text-[#8888a0] text-xs uppercase tracking-widest">Description</label>
+              <input
+                type="text" name="text" list="desc"
+                className="w-full bg-[#17171f] border border-[rgba(245,166,35,0.12)] rounded-xl px-4 py-3 text-sm text-[#f0f0f5] placeholder:text-[#8888a0]
+                           focus:outline-none focus:border-[#f5a623] focus:ring-1 focus:ring-[rgba(245,166,35,0.3)] transition-all duration-200"
+                defaultValue={editingTransaction?.text}
+                key={editingTransaction?.id + '-text'}
+                required
+              />
+              <datalist id="desc">
+                <option value="Salaire">Salaire</option>
+                <option value="Loyer">Loyer</option>
+                <option value="Cours">Cours</option>
+                <option value="Abonnement">Abonnement</option>
+              </datalist>
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-[#8888a0] text-xs uppercase tracking-widest">Montant</label>
+              <input
+                type="number" step="0.01" name="amount"
+                className="w-full bg-[#17171f] border border-[rgba(245,166,35,0.12)] rounded-xl px-4 py-3 text-sm text-[#f0f0f5] placeholder:text-[#8888a0]
+                           focus:outline-none focus:border-[#f5a623] focus:ring-1 focus:ring-[rgba(245,166,35,0.3)] transition-all duration-200"
+                defaultValue={editingTransaction?.amount}
+                key={editingTransaction?.id + '-amount'}
+                required
+              />
+            </div>
+            <motion.button
+              type="submit"
+              disabled={isSubmitting}
+              className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-[#f5a623] text-black font-['DM_Sans',sans-serif] font-semibold text-sm
+                         hover:bg-[#ffc85c] hover:shadow-[0_6px_24px_rgba(245,166,35,0.3)] transition-all duration-200 disabled:opacity-60"
+              whileHover={{ y: -1 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              {isSubmitting
+                ? <><motion.div className="w-4 h-4 rounded-full border-2 border-black border-t-transparent" animate={{ rotate: 360 }} transition={{ duration: 0.7, repeat: Infinity, ease: 'linear' }} /> Modification en cours…</>
+                : <><SquarePen className="w-4 h-4" /> Modifier</>}
+            </motion.button>
+          </form>
+        </motion.div>
+        <form method="dialog" className="modal-backdrop"><button>Fermer</button></form>
+      </dialog>
+
+      {/* ── MODAL SUPPRESSION ───────────────────────────────── */}
+      <dialog ref={deleteModalRef} className="modal backdrop-blur-md">
+        <motion.div
+          className="modal-box bg-[#111118] border border-[rgba(239,68,68,0.2)] rounded-2xl p-8 max-w-md w-full shadow-[0_32px_64px_rgba(0,0,0,0.6)]"
+          initial={{ opacity: 0, scale: 0.95, y: 16 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.25 }}
+        >
+          <form method="dialog">
+            <button className="absolute right-5 top-5 w-8 h-8 rounded-lg bg-[#1e1e28] border border-[rgba(255,255,255,0.06)] flex items-center justify-center text-[#8888a0] hover:text-[#f0f0f5] transition-colors text-base leading-none">
+              ✕
+            </button>
+          </form>
+
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-xl bg-[rgba(239,68,68,0.12)] border border-[rgba(239,68,68,0.25)] flex items-center justify-center shrink-0">
+              <Trash2 className="w-5 h-5 text-[#ef4444]" />
+            </div>
+            <h3 className="font-['Syne',sans-serif] font-bold text-lg text-[#f0f0f5]">
+              {deleteMode === 'single' && 'Supprimer la transaction'}
+              {deleteMode === 'selected' && 'Supprimer la sélection'}
+              {deleteMode === 'all' && 'Tout supprimer'}
+            </h3>
+          </div>
+
+          <p className="text-[#8888a0] text-sm leading-relaxed mb-6 pl-[52px]">
+            {deleteMode === 'single' && deletingTransaction && (
+              <>
+                Vous êtes sur le point de supprimer{' '}
+                <span className="text-[#f0f0f5] font-medium">« {deletingTransaction.text} »</span>.{' '}
+                Cette action est irréversible.
+              </>
+            )}
+            {deleteMode === 'selected' && (
+              <>
+                Vous êtes sur le point de supprimer{' '}
+                <span className="text-[#f0f0f5] font-medium">{selected.size} transaction(s) sélectionnée(s)</span>.{' '}
+                Cette action est irréversible.
+              </>
+            )}
+            {deleteMode === 'all' && (
+              <>
+                Vous êtes sur le point de supprimer{' '}
+                <span className="text-[#f0f0f5] font-medium">toutes les {transactions.length} transactions</span>.{' '}
+                Cette action est irréversible.
+              </>
+            )}
+          </p>
+
+          <div className="flex gap-3">
+            <form method="dialog" className="flex-1">
+              <motion.button
+                type="submit"
+                className="w-full py-3 rounded-xl border border-[rgba(255,255,255,0.08)] bg-[#1e1e28] text-[#8888a0] font-['DM_Sans',sans-serif] font-medium text-sm hover:text-[#f0f0f5] hover:border-[rgba(255,255,255,0.16)] transition-all duration-200"
+                whileHover={{ y: -1 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                Annuler
+              </motion.button>
+            </form>
+            <motion.button
+              className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-[#ef4444] text-white font-['DM_Sans',sans-serif] font-semibold text-sm hover:bg-[#f87171] hover:shadow-[0_6px_24px_rgba(239,68,68,0.35)] transition-all duration-200"
+              onClick={handleConfirmDelete}
+              whileHover={{ y: -1 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              <Trash2 className="w-4 h-4" /> Supprimer
+            </motion.button>
+          </div>
+        </motion.div>
+        <form method="dialog" className="modal-backdrop"><button>Fermer</button></form>
+      </dialog>
     </div>
   );
 }
