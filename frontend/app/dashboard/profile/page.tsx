@@ -425,7 +425,7 @@ export default function ProfilePage() {
             </h3>
           </div>
 
-          <p className="text-[#8888a0] text-sm leading-relaxed mb-6 pl-[52px]">
+          <p className="text-[#8888a0] text-sm leading-relaxed mb-6 pl-13">
             Vous êtes sur le point de supprimer{' '}
             <span className="text-[#f0f0f5] font-medium">Votre compte ?</span>.{' '}
             Cette action est irréversible.

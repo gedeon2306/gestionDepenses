@@ -259,7 +259,7 @@ export default function Home() {
             </div>
             <div className="h-2 bg-[#1e1e28] rounded-full overflow-hidden">
               <motion.div
-                className="h-full bg-gradient-to-r from-[#c47d0a] to-[#f5a623] rounded-full"
+                className="h-full bg-linear-to-r from-[#c47d0a] to-[#f5a623] rounded-full"
                 initial={{ width: 0 }}
                 animate={{ width: `${ratio}%` }}
                 transition={{ duration: 1.2, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
@@ -387,7 +387,7 @@ export default function Home() {
                       </td>
 
                       {/* Description */}
-                      <td className="px-3 py-4 text-[#f0f0f5] text-sm font-medium max-w-[200px] truncate">
+                      <td className="px-3 py-4 text-[#f0f0f5] text-sm font-medium max-w-50 truncate">
                         {transaction.text}
                       </td>
 
@@ -527,7 +527,7 @@ export default function Home() {
             <div>
               <h3 className="font-['Syne',sans-serif] font-bold text-lg text-[#f0f0f5]">Modifier</h3>
               {editingTransaction?.text && (
-                <p className="text-[#8888a0] text-xs truncate max-w-[220px]">{editingTransaction.text}</p>
+                <p className="text-[#8888a0] text-xs truncate max-w-55">{editingTransaction.text}</p>
               )}
             </div>
           </div>
@@ -603,7 +603,7 @@ export default function Home() {
             </h3>
           </div>
 
-          <p className="text-[#8888a0] text-sm leading-relaxed mb-6 pl-[52px]">
+          <p className="text-[#8888a0] text-sm leading-relaxed mb-6 pl-13">
             {deleteMode === 'single' && deletingTransaction && (
               <>
                 Vous êtes sur le point de supprimer{' '}

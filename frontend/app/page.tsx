@@ -116,7 +116,7 @@ function FeatureCard({ icon, title, desc, index }: { icon: React.ReactNode; titl
                  transition-[border-color,box-shadow] duration-300"
     >
       <motion.div
-        className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-[#f5a623] to-transparent"
+        className="absolute top-0 left-0 right-0 h-px bg-linear-to-r from-transparent via-[#f5a623] to-transparent"
         initial={{ opacity: 0 }}
         whileHover={{ opacity: 1 }}
         transition={{ duration: 0.3 }}
@@ -150,7 +150,7 @@ function Step({ num, title, desc, isLast, index }: { num: string; title: string;
           {num}
         </div>
         {!isLast && (
-          <div className="w-0.5 flex-1 min-h-[40px] bg-gradient-to-b from-[#f5a623] to-transparent my-1" />
+          <div className="w-0.5 flex-1 min-h-10 bg-linear-to-b from-[#f5a623] to-transparent my-1" />
         )}
       </div>
       <div className="pb-10">
@@ -171,7 +171,7 @@ function AnimatedProgressBar() {
   return (
     <div ref={ref} className="h-1.5 bg-[#25252f] rounded-full overflow-hidden">
       <motion.div
-        className="h-full bg-gradient-to-r from-[#c47d0a] to-[#f5a623] rounded-full"
+        className="h-full bg-linear-to-r from-[#c47d0a] to-[#f5a623] rounded-full"
         initial={{ width: 0 }}
         animate={inView ? { width: '68%' } : {}}
         transition={{ duration: 2, delay: 1, ease: [0.16, 1, 0.3, 1] }}
@@ -231,7 +231,7 @@ export default function LandingPage() {
 
       {/* ── NAV ── */}
       <motion.nav
-        className="fixed top-0 left-0 right-0 z-[100] px-8 py-5 flex items-center justify-between backdrop-blur-xl border-b border-[rgba(245,166,35,0.12)] transition-[background] duration-300"
+        className="fixed top-0 left-0 right-0 z-100 px-8 py-5 flex items-center justify-between backdrop-blur-xl border-b border-[rgba(245,166,35,0.12)] transition-[background] duration-300"
         style={{ background: scrolled ? 'rgba(10,10,15,0.95)' : 'rgba(10,10,15,0.7)' }}
         initial={{ y: -80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -265,7 +265,7 @@ export default function LandingPage() {
 
         {/* Pulsing blob */}
         <motion.div
-          className="absolute w-[700px] h-[700px] rounded-full pointer-events-none top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
+          className="absolute w-175 h-175 rounded-full pointer-events-none top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2"
           style={{
             background: 'radial-gradient(circle, rgba(245,166,35,0.12) 0%, transparent 70%)',
             scale: blobScale,
@@ -291,13 +291,13 @@ export default function LandingPage() {
         >
           Reprenez le contrôle<br />
           de vos{' '}
-          <span className="text-[#f5a623] relative after:content-[''] after:absolute after:bottom-1 after:left-0 after:right-0 after:h-[3px] after:bg-gradient-to-r after:from-[#f5a623] after:to-transparent after:rounded-sm">
+          <span className="text-[#f5a623] relative after:content-[''] after:absolute after:bottom-1 after:left-0 after:right-0 after:h-0.75 after:bg-linear-to-r after:from-[#f5a623] after:to-transparent after:rounded-sm">
             finances
           </span>
         </motion.h1>
 
         <motion.p
-          className="relative z-10 text-[#8888a0] max-w-[520px] mx-auto mb-10 font-light text-[clamp(1rem,2.5vw,1.2rem)]"
+          className="relative z-10 text-[#8888a0] max-w-130 mx-auto mb-10 font-light text-[clamp(1rem,2.5vw,1.2rem)]"
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2, ease: 'easeOut' }}
@@ -333,7 +333,7 @@ export default function LandingPage() {
 
         {/* DASHBOARD MOCKUP */}
         <motion.div
-          className="relative z-10 mt-20 w-full max-w-[820px] mx-auto px-4"
+          className="relative z-10 mt-20 w-full max-w-205 mx-auto px-4"
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.4, ease: 'easeOut' }}
@@ -350,12 +350,12 @@ export default function LandingPage() {
               <div className="w-2.5 h-2.5 rounded-full bg-[#f59e0b]" />
               <div className="w-2.5 h-2.5 rounded-full bg-[#22c55e]" />
               <div className="flex-1 bg-[#111118] rounded-md px-3 py-1 text-xs text-[#8888a0] ml-2">
-                localhost:3000 — Tableau de bord
+                Depenseflow - Tableau de bord
               </div>
             </div>
             {/* Scrollable body on mobile — min-w forces layout to never collapse */}
             <div className="overflow-x-auto">
-              <div className="p-6 min-w-[560px]">
+              <div className="p-6 min-w-140">
                 {/* Stats */}
                 <div className="grid grid-cols-3 gap-3 mb-4">
                   {[
@@ -417,7 +417,7 @@ export default function LandingPage() {
 
       {/* ── STATS ── */}
       <section className="bg-[#111118] border-t border-b border-[rgba(245,166,35,0.12)] py-20 px-8">
-        <div className="max-w-[1100px] mx-auto">
+        <div className="max-w-275 mx-auto">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-12">
             {stats.map((s) => <StatCounter key={s.label} {...s} />)}
           </div>
@@ -426,7 +426,7 @@ export default function LandingPage() {
 
       {/* ── FEATURES ── */}
       <section id="fonctionnalites" className="py-28 px-8">
-        <div className="max-w-[1100px] mx-auto">
+        <div className="max-w-275 mx-auto">
           <motion.span
             className="inline-block text-[0.75rem] font-semibold text-[#f5a623] uppercase tracking-[0.12em] mb-4"
             initial={{ opacity: 0, y: 12 }}
@@ -446,7 +446,7 @@ export default function LandingPage() {
             Tout ce dont vous<br />avez besoin
           </motion.h2>
           <motion.p
-            className="text-[#8888a0] text-[1.05rem] font-light max-w-[480px]"
+            className="text-[#8888a0] text-[1.05rem] font-light max-w-120"
             initial={{ opacity: 0, y: 12 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
@@ -462,7 +462,7 @@ export default function LandingPage() {
 
       {/* ── HOW IT WORKS ── */}
       <section id="comment" className="bg-[#111118] border-t border-b border-[rgba(245,166,35,0.12)] py-28 px-8">
-        <div className="max-w-[1100px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+        <div className="max-w-275 mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <div>
             <motion.span
               className="inline-block text-[0.75rem] font-semibold text-[#f5a623] uppercase tracking-[0.12em] mb-4"
@@ -483,7 +483,7 @@ export default function LandingPage() {
               Démarrez en<br />3 étapes
             </motion.h2>
             <motion.p
-              className="text-[#8888a0] text-[1.05rem] font-light max-w-[480px]"
+              className="text-[#8888a0] text-[1.05rem] font-light max-w-120"
               initial={{ opacity: 0, y: 12 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -502,9 +502,9 @@ export default function LandingPage() {
 
       {/* ── CTA ── */}
       <section id="cta" className="py-28 px-8 text-center">
-        <div className="card bg-[#1e1e28] border border-[rgba(245,166,35,0.12)] rounded-3xl p-16 max-sm:p-10 relative overflow-hidden max-w-[1100px] mx-auto">
+        <div className="card bg-[#1e1e28] border border-[rgba(245,166,35,0.12)] rounded-3xl p-16 max-sm:p-10 relative overflow-hidden max-w-275 mx-auto">
           <div
-            className="absolute -top-24 left-1/2 -translate-x-1/2 w-[400px] h-[400px] pointer-events-none"
+            className="absolute -top-24 left-1/2 -translate-x-1/2 w-100 h-100 pointer-events-none"
             style={{ background: 'radial-gradient(circle, rgba(245,166,35,0.15) 0%, transparent 70%)' }}
           />
           <motion.h2
