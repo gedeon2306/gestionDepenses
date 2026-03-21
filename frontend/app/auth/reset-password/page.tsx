@@ -1,11 +1,12 @@
 'use client'
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react'; // Ajout de Suspense
 import { useSearchParams, useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { Lock, ShieldCheck } from 'lucide-react';
-import { motion } from 'motion/react';
+import { motion } from 'framer-motion'; // Assurez-vous du nom du package (framer-motion ou motion/react)
 
-export default function ResetPasswordPage() {
+// 1. Composant interne contenant toute la logique
+function ResetPasswordContent() {
   const [password, setPassword] = useState('');
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [loading, setLoading] = useState(false);
@@ -73,17 +74,117 @@ export default function ResetPasswordPage() {
 
   if (!isValid) {
     return (
-      <main className="min-h-screen bg-[#0a0a0f] flex items-center justify-center px-4 relative overflow-hidden font-['Syne',sans-serif]">
-        <div className="relative z-10 text-center">
-          <p className="text-[#8888a0]">Redirection en cours...</p>
-        </div>
-      </main>
+      <div className="relative z-10 text-center">
+        <p className="text-[#8888a0]">Vérification du lien...</p>
+      </div>
     );
   }
 
   return (
-    <main className="min-h-screen bg-[#0a0a0f] flex items-center justify-center px-4 relative overflow-hidden font-['Syne',sans-serif]">
+    <motion.div
+      className="relative z-10 w-full max-w-md"
+      initial={{ opacity: 0, y: 24 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: 'easeOut' }}
+    >
+      {/* Logo */}
+      <motion.div
+        className="text-center mb-8"
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.05 }}
+      >
+        <span className="font-['Syne',sans-serif] font-extrabold text-2xl text-[#f5a623] tracking-tight">
+          Depense<span className="text-[#f0f0f5]">Flow</span>
+        </span>
+      </motion.div>
 
+      <motion.div
+        className="bg-[#111118] border border-[rgba(245,166,35,0.12)] rounded-2xl p-8 shadow-[0_32px_64px_rgba(0,0,0,0.5)]"
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.1 }}
+      >
+        <div className="flex flex-col items-center text-center mb-7">
+          <div className="w-16 h-16 rounded-2xl bg-[rgba(245,166,35,0.1)] border border-[rgba(245,166,35,0.2)] flex items-center justify-center mb-5">
+            <ShieldCheck className="w-8 h-8 text-[#f5a623]" />
+          </div>
+          <h1 className="font-['Syne',sans-serif] font-extrabold text-2xl text-[#f0f0f5] mb-2">
+            Réinitialisation
+          </h1>
+          <p className="text-[#8888a0] text-sm font-light max-w-75">
+            Choisissez un nouveau mot de passe sécurisé pour votre compte.
+          </p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+          <div className="flex flex-col gap-2">
+            <label className="text-[#8888a0] text-xs uppercase tracking-widest">
+              Nouveau mot de passe
+            </label>
+            <div className="relative">
+              <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8888a0] pointer-events-none" />
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                required
+                className="w-full bg-[#17171f] border border-[rgba(245,166,35,0.12)] rounded-xl pl-10 pr-4 py-3 text-sm text-[#f0f0f5] placeholder:text-[#8888a0]
+                           focus:outline-none focus:border-[#f5a623] focus:ring-1 focus:ring-[rgba(245,166,35,0.3)] transition-all duration-200"
+              />
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <label className="text-[#8888a0] text-xs uppercase tracking-widest">
+              Confirmer le mot de passe
+            </label>
+            <div className="relative">
+              <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8888a0] pointer-events-none" />
+              <input
+                type="password"
+                value={passwordConfirm}
+                onChange={(e) => setPasswordConfirm(e.target.value)}
+                placeholder="••••••••"
+                required
+                className="w-full bg-[#17171f] border border-[rgba(245,166,35,0.12)] rounded-xl pl-10 pr-4 py-3 text-sm text-[#f0f0f5] placeholder:text-[#8888a0]
+                           focus:outline-none focus:border-[#f5a623] focus:ring-1 focus:ring-[rgba(245,166,35,0.3)] transition-all duration-200"
+              />
+            </div>
+          </div>
+
+          <motion.button
+            type="submit"
+            disabled={loading}
+            className="flex items-center justify-center gap-2 w-full py-3 mt-1 rounded-xl bg-[#f5a623] text-black font-['DM_Sans',sans-serif] font-semibold text-sm
+                       hover:bg-[#ffc85c] hover:shadow-[0_6px_24px_rgba(245,166,35,0.35)] transition-all duration-200 disabled:opacity-60"
+            whileHover={{ y: -1 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            {loading ? (
+              <motion.div
+                className="w-4 h-4 rounded-full border-2 border-black border-t-transparent"
+                animate={{ rotate: 360 }}
+                transition={{ duration: 0.7, repeat: Infinity, ease: 'linear' }}
+              />
+            ) : (
+              <>
+                <ShieldCheck className="w-4 h-4" />
+                Mettre à jour le mot de passe
+              </>
+            )}
+          </motion.button>
+        </form>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+// 2. Composant principal avec les éléments de décor et le Suspense
+export default function ResetPasswordPage() {
+  return (
+    <main className="min-h-screen bg-[#0a0a0f] flex items-center justify-center px-4 relative overflow-hidden font-['Syne',sans-serif]">
       {/* Noise overlay */}
       <div
         className="fixed inset-0 pointer-events-none z-0 opacity-40"
@@ -94,114 +195,13 @@ export default function ResetPasswordPage() {
 
       {/* Background glow */}
       <div
-        className="absolute w-[600px] h-[600px] rounded-full pointer-events-none top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0"
+        className="absolute w-150 h-150 rounded-full pointer-events-none top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0"
         style={{ background: 'radial-gradient(circle, rgba(245,166,35,0.08) 0%, transparent 70%)' }}
       />
 
-      <motion.div
-        className="relative z-10 w-full max-w-md"
-        initial={{ opacity: 0, y: 24 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: 'easeOut' }}
-      >
-        {/* Logo */}
-        <motion.div
-          className="text-center mb-8"
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.05 }}
-        >
-          <span className="font-['Syne',sans-serif] font-extrabold text-2xl text-[#f5a623] tracking-tight">
-            Depense<span className="text-[#f0f0f5]">Flow</span>
-          </span>
-        </motion.div>
-
-        <motion.div
-          className="bg-[#111118] border border-[rgba(245,166,35,0.12)] rounded-2xl p-8 shadow-[0_32px_64px_rgba(0,0,0,0.5)]"
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
-        >
-          {/* Icon + Header */}
-          <div className="flex flex-col items-center text-center mb-7">
-            <div className="w-16 h-16 rounded-2xl bg-[rgba(245,166,35,0.1)] border border-[rgba(245,166,35,0.2)] flex items-center justify-center mb-5">
-              <ShieldCheck className="w-8 h-8 text-[#f5a623]" />
-            </div>
-            <h1 className="font-['Syne',sans-serif] font-extrabold text-2xl text-[#f0f0f5] mb-2">
-              Réinitialisation
-            </h1>
-            <p className="text-[#8888a0] text-sm font-light max-w-[300px]">
-              Choisissez un nouveau mot de passe sécurisé pour votre compte.
-            </p>
-          </div>
-
-          <div className="flex flex-col gap-5">
-            {/* Nouveau mot de passe */}
-            <div className="flex flex-col gap-2">
-              <label className="text-[#8888a0] text-xs uppercase tracking-widest">
-                Nouveau mot de passe
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8888a0] pointer-events-none" />
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                  className="w-full bg-[#17171f] border border-[rgba(245,166,35,0.12)] rounded-xl pl-10 pr-4 py-3 text-sm text-[#f0f0f5] placeholder:text-[#8888a0]
-                             focus:outline-none focus:border-[#f5a623] focus:ring-1 focus:ring-[rgba(245,166,35,0.3)] transition-all duration-200"
-                />
-              </div>
-            </div>
-
-            {/* Confirmer mot de passe */}
-            <div className="flex flex-col gap-2">
-              <label className="text-[#8888a0] text-xs uppercase tracking-widest">
-                Confirmer le mot de passe
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8888a0] pointer-events-none" />
-                <input
-                  type="password"
-                  value={passwordConfirm}
-                  onChange={(e) => setPasswordConfirm(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                  className="w-full bg-[#17171f] border border-[rgba(245,166,35,0.12)] rounded-xl pl-10 pr-4 py-3 text-sm text-[#f0f0f5] placeholder:text-[#8888a0]
-                             focus:outline-none focus:border-[#f5a623] focus:ring-1 focus:ring-[rgba(245,166,35,0.3)] transition-all duration-200"
-                />
-              </div>
-            </div>
-
-            {/* Submit */}
-            <motion.button
-              onClick={handleSubmit}
-              disabled={loading}
-              className="flex items-center justify-center gap-2 w-full py-3 mt-1 rounded-xl bg-[#f5a623] text-black font-['DM_Sans',sans-serif] font-semibold text-sm
-                         hover:bg-[#ffc85c] hover:shadow-[0_6px_24px_rgba(245,166,35,0.35)] transition-all duration-200 disabled:opacity-60"
-              whileHover={{ y: -1 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              {loading ? (
-                <>
-                  <motion.div
-                    className="w-4 h-4 rounded-full border-2 border-black border-t-transparent"
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 0.7, repeat: Infinity, ease: 'linear' }}
-                  />
-                  Mise à jour…
-                </>
-              ) : (
-                <>
-                  <ShieldCheck className="w-4 h-4" />
-                  Mettre à jour le mot de passe
-                </>
-              )}
-            </motion.button>
-          </div>
-        </motion.div>
-      </motion.div>
+      <Suspense fallback={<p className="text-[#8888a0]">Chargement...</p>}>
+        <ResetPasswordContent />
+      </Suspense>
     </main>
   );
 }
