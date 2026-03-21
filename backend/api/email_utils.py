@@ -17,10 +17,10 @@ def send_confirmation_email(user):
 
     confirm_url = f"{settings.FRONTEND_URL.rstrip('/')}/auth/confirm?uid={uidb64}&token={token}&action={action}"
 
-    subject = "Confirme ton inscription à DepenseFlow"
+    subject = "Confirmez votre inscription à DepenseFlow"
     message = (
         f"Bonjour {user.name},\n\n"
-        "Merci de t'être inscrit à DepenseFlow.\n"
+        "Merci de vous être inscrit à DepenseFlow.\n"
         "Pour activer votre compte et vous connecter automatiquement, cliquez sur le lien suivant :\n\n"
         f"{confirm_url}\n\n"
         "Ce lien expire dans 10 minutes.\n\n"
@@ -46,7 +46,6 @@ def send_password_reset_email(user):
     action = "forgot-password"
 
     reset_url = f"{settings.FRONTEND_URL.rstrip('/')}/auth/confirm?uid={uidb64}&token={token}&action={action}"
-    # reset_url = f"{settings.FRONTEND_URL.rstrip('/')}/auth/reset-password?uid={uidb64}&token={token}"
 
     subject = "Réinitialisation de votre mot de passe — DepenseFlow"
     message = (
