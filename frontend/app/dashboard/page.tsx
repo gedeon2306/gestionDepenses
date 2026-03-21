@@ -194,7 +194,7 @@ export default function Home() {
             transition={{ duration: 0.4, delay: 0.05 }}
           >
             <div className="space-y-1">
-              <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-[#f5a623] to-[#ffc85c]">
+              <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-transparent bg-clip-text bg-linear-to-r from-[#f5a623] to-[#ffc85c]">
                 Tableau de bord
               </h1>
               <p className="text-sm md:text-base text-[#8888a0]">
