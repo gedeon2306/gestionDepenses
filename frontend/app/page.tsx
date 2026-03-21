@@ -15,9 +15,6 @@ import {
 } from 'motion/react'
 import { ROUTES } from '@/src/constants/routes'
 
-// ─────────────────────────────────────────────
-// Data
-// ─────────────────────────────────────────────
 const features = [
   {
     icon: <LayoutDashboard className="w-6 h-6 text-[#f5a623]" />,
@@ -72,9 +69,6 @@ const mockRows = [
   { label: 'Abonnements divers',    amount: '-350,00 f',   date: '18 fév. 2026', type: 'expense' },
 ]
 
-// ─────────────────────────────────────────────
-// Animated counter — Motion only
-// ─────────────────────────────────────────────
 function StatCounter({ target, suffix, label }: { target: number; suffix: string; label: string }) {
   const ref = useRef<HTMLDivElement>(null)
   const inView = useInView(ref, { once: true, margin: '-50px' })
@@ -97,9 +91,6 @@ function StatCounter({ target, suffix, label }: { target: number; suffix: string
   )
 }
 
-// ─────────────────────────────────────────────
-// Feature card — scroll reveal via Motion
-// ─────────────────────────────────────────────
 function FeatureCard({ icon, title, desc, index }: { icon: React.ReactNode; title: string; desc: string; index: number }) {
   const ref = useRef<HTMLDivElement>(null)
   const inView = useInView(ref, { once: true, margin: '-60px' })
@@ -130,9 +121,6 @@ function FeatureCard({ icon, title, desc, index }: { icon: React.ReactNode; titl
   )
 }
 
-// ─────────────────────────────────────────────
-// Step — slide in from left via Motion
-// ─────────────────────────────────────────────
 function Step({ num, title, desc, isLast, index }: { num: string; title: string; desc: string; isLast: boolean; index: number }) {
   const ref = useRef<HTMLDivElement>(null)
   const inView = useInView(ref, { once: true, margin: '-60px' })
@@ -161,9 +149,6 @@ function Step({ num, title, desc, isLast, index }: { num: string; title: string;
   )
 }
 
-// ─────────────────────────────────────────────
-// Progress bar — Motion animate on inView
-// ─────────────────────────────────────────────
 function AnimatedProgressBar() {
   const ref = useRef<HTMLDivElement>(null)
   const inView = useInView(ref, { once: true })
@@ -180,9 +165,6 @@ function AnimatedProgressBar() {
   )
 }
 
-// ─────────────────────────────────────────────
-// Blinking dot — Motion keyframes
-// ─────────────────────────────────────────────
 function BlinkDot() {
   return (
     <motion.span
@@ -193,9 +175,6 @@ function BlinkDot() {
   )
 }
 
-// ─────────────────────────────────────────────
-// Page
-// ─────────────────────────────────────────────
 export default function LandingPage() {
   const [scrolled, setScrolled] = useState(false)
   useEffect(() => {
@@ -229,7 +208,7 @@ export default function LandingPage() {
         }}
       />
 
-      {/* ── NAV ── */}
+      {/* NAV */}
       <motion.nav
         className="fixed top-0 left-0 right-0 z-100 px-8 py-5 flex items-center justify-between backdrop-blur-xl border-b border-[rgba(245,166,35,0.12)] transition-[background] duration-300"
         style={{ background: scrolled ? 'rgba(10,10,15,0.95)' : 'rgba(10,10,15,0.7)' }}
@@ -260,7 +239,7 @@ export default function LandingPage() {
         </Link>
       </motion.nav>
 
-      {/* ── HERO ── */}
+      {/* HERO */}
       <section className="min-h-screen flex flex-col items-center justify-center text-center px-6 pt-32 pb-16 relative">
 
         {/* Pulsing blob */}
@@ -415,7 +394,7 @@ export default function LandingPage() {
         </motion.div>
       </section>
 
-      {/* ── STATS ── */}
+      {/* STATS */}
       <section className="bg-[#111118] border-t border-b border-[rgba(245,166,35,0.12)] py-20 px-8">
         <div className="max-w-275 mx-auto">
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-12">
@@ -424,7 +403,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── FEATURES ── */}
+      {/* FEATURES */}
       <section id="fonctionnalites" className="py-28 px-8">
         <div className="max-w-275 mx-auto">
           <motion.span
@@ -460,7 +439,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── HOW IT WORKS ── */}
+      {/* HOW IT WORKS */}
       <section id="comment" className="bg-[#111118] border-t border-b border-[rgba(245,166,35,0.12)] py-28 px-8">
         <div className="max-w-275 mx-auto grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
           <div>
@@ -500,7 +479,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── CTA ── */}
+      {/* CTA */}
       <section id="cta" className="py-28 px-8 text-center">
         <div className="card bg-[#1e1e28] border border-[rgba(245,166,35,0.12)] rounded-3xl p-16 max-sm:p-10 relative overflow-hidden max-w-275 mx-auto">
           <div
@@ -554,7 +533,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── FOOTER ── */}
+      {/* FOOTER */}
       <footer className="px-8 py-10 border-t border-[rgba(245,166,35,0.12)] flex items-center justify-between flex-wrap gap-4 max-sm:flex-col max-sm:text-center">
         <div className="font-['Syne',sans-serif] font-extrabold text-[#f5a623] text-lg">DepenseFlow</div>
         <div className="text-[#8888a0] text-xs">

@@ -1,10 +1,49 @@
 'use client'
+import { useState } from 'react';
 import { ROUTES } from '@/src/constants/routes'
 import { ArrowLeft, KeyRound, Link2, Mail } from 'lucide-react';
 import Link from 'next/link'
+import { useRouter } from 'next/navigation';
 import { motion } from 'motion/react';
+import toast from 'react-hot-toast';
+import axios from 'axios';
 
 export default function ForgotPasswordPage() {
+  const router = useRouter()
+
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email) {
+      toast.error('Veuillez entrer votre email');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await axios.post('/api/forgot-password', {email});
+
+      console.log(res)
+      toast.success(res.data.message);
+      setEmail('');
+      const action = "forgot-password"
+      router.replace(`${ROUTES.AUTH.EMAIL_SEND}${email ? `?email=${encodeURIComponent(email)}&action=${encodeURIComponent(action)}` : ''}`);
+      router.refresh();
+    } catch (error: any) {
+      console.log(error?.response)
+      if (error?.response?.status === 400) {
+        toast.error(error?.response?.data.error);
+      } else {
+        toast.error("Problème de connexion au serveur");
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <main className="min-h-screen bg-[#0a0a0f] flex items-center justify-center px-4 relative overflow-hidden font-['Syne',sans-serif]">
 
@@ -18,7 +57,7 @@ export default function ForgotPasswordPage() {
 
       {/* Background glow */}
       <div
-        className="absolute w-[600px] h-[600px] rounded-full pointer-events-none top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0"
+        className="absolute w-150 h-150 rounded-full pointer-events-none top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-0"
         style={{ background: 'radial-gradient(circle, rgba(245,166,35,0.08) 0%, transparent 70%)' }}
       />
 
@@ -59,7 +98,7 @@ export default function ForgotPasswordPage() {
             </p>
           </div>
 
-          <form className="flex flex-col gap-5">
+          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
             {/* Email */}
             <div className="flex flex-col gap-2">
               <label className="text-[#8888a0] text-xs uppercase tracking-widest">
@@ -69,6 +108,9 @@ export default function ForgotPasswordPage() {
                 <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8888a0] pointer-events-none" />
                 <input
                   type="email"
+                  name='email'
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="nom@exemple.com"
                   required
                   className="w-full bg-[#17171f] border border-[rgba(245,166,35,0.12)] rounded-xl pl-10 pr-4 py-3 text-sm text-[#f0f0f5] placeholder:text-[#8888a0]
@@ -78,16 +120,30 @@ export default function ForgotPasswordPage() {
             </div>
 
             {/* Submit */}
-            <motion.div whileHover={{ y: -1 }} whileTap={{ scale: 0.98 }}>
-              <Link
-                href={ROUTES.AUTH.RESET_PASSWORD}
-                className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-[#f5a623] text-black font-['DM_Sans',sans-serif] font-semibold text-sm
-                           hover:bg-[#ffc85c] hover:shadow-[0_6px_24px_rgba(245,166,35,0.35)] transition-all duration-200 no-underline"
-              >
-                Envoyer le lien
-                <Link2 className="w-4 h-4" />
-              </Link>
-            </motion.div>
+            <motion.button
+              type="submit"
+              disabled={loading}
+              className="flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-[#f5a623] text-black font-['DM_Sans',sans-serif] font-semibold text-sm
+                         hover:bg-[#ffc85c] hover:shadow-[0_6px_24px_rgba(245,166,35,0.35)] transition-all duration-200 disabled:opacity-60"
+              whileHover={{ y: -1 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              {loading ? (
+                <>
+                  <motion.div
+                    className="w-4 h-4 rounded-full border-2 border-black border-t-transparent"
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 0.7, repeat: Infinity, ease: 'linear' }}
+                  />
+                  Envoi en cours…
+                </>
+              ) : (
+                <>
+                  Envoyer le lien
+                  <Link2 className="w-4 h-4" />
+                </>
+              )}
+            </motion.button>
           </form>
 
           {/* Back to login */}

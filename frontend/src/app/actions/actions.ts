@@ -298,3 +298,40 @@ export async function updatePassword(formData: FormData) {
     return null;
   }
 }
+
+
+export async function stats(formData: FormData) {
+  const cookieStore = await cookies();
+  const token = cookieStore.get('access_token')?.value;
+  if (!token) return null;
+
+  const month = formData.get('month');
+  const year = formData.get('year');
+
+  if (!month || !year) return null;
+
+  const data = {
+    month: parseInt(month as string),
+    year: parseInt(year as string),
+  };
+
+  try {
+    const response = await api.post('monthly-summary/', data, {
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' }
+    });
+    return response.data;
+  } catch (error: any) {
+    if (error?.response?.status === 401) {
+      const newToken = await refreshAccessToken();
+      if (!newToken) return null;
+      try {
+        const response = await api.post('monthly-summary/', data, {
+          headers: { Authorization: `Bearer ${newToken}`, 'Content-Type': 'application/json' }
+        });
+        return response.data;
+      } catch { return null; }
+    }
+    console.error('Erreur statistiques:', error);
+    return null;
+  }
+}

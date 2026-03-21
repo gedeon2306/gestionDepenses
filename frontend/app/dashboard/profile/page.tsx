@@ -137,7 +137,22 @@ export default function ProfilePage() {
           transition={{ duration: 0.5, ease: 'easeOut' }}
         >
 
-          {/* ── AVATAR CARD ── */}
+          {/* EN-TÊTE */}
+          <motion.section
+            className="flex flex-col gap-2 mb-4"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.05 }}
+          >
+            <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-[#f5a623] to-[#ffc85c]">
+              Mon profil
+            </h1>
+            <p className="text-sm md:text-base text-[#8888a0]">
+              Gérez vos informations de compte et vos paramètres de sécurité.
+            </p>
+          </motion.section>
+
+          {/* AVATAR CARD */}
           <motion.div
             className="rounded-2xl border border-[rgba(245,166,35,0.15)] bg-[rgba(245,166,35,0.04)] p-8 flex flex-col items-center gap-4"
             initial={{ opacity: 0, y: 12 }}
@@ -152,7 +167,7 @@ export default function ProfilePage() {
                 </span>
               </div>
               {/* Badge actif */}
-              <div className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-[#22c55e] border-2 border-[#0a0a0f]" />
+              <div className="absolute bottom-1 right-0 w-5 h-5 rounded-full bg-[#22c55e] border-2 border-[#0a0a0f]" />
             </div>
 
             <div className="text-center">
@@ -169,7 +184,7 @@ export default function ProfilePage() {
             </div>
           </motion.div>
 
-          {/* ── FORMS CARD ── */}
+          {/* FORMS CARD */}
           <motion.div
             className="rounded-2xl border border-[rgba(245,166,35,0.12)] bg-[#111118] p-6"
             initial={{ opacity: 0, y: 12 }}
@@ -348,7 +363,7 @@ export default function ProfilePage() {
             </form>
           </motion.div>
 
-          {/* ── DANGER ZONE ── */}
+          {/* DANGER ZONE */}
           <motion.div
             className="rounded-2xl border border-[rgba(239,68,68,0.2)] bg-[rgba(239,68,68,0.03)] p-6"
             initial={{ opacity: 0, y: 12 }}

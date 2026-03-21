@@ -22,6 +22,11 @@ export function middleware(request: NextRequest) {
         return NextResponse.redirect(new URL(ROUTES.DASHBOARD.ROOT, request.url));
     }
 
+    // 5. Si l'utilisateur est DÉJÀ connecté et essaie d'aller sur la page de confirmation ou email-send
+    if (token && (pathname === ROUTES.AUTH.CONFIRM || pathname === ROUTES.AUTH.EMAIL_SEND)) {
+        return NextResponse.redirect(new URL(ROUTES.DASHBOARD.ROOT, request.url));
+    }
+
     return NextResponse.next();
 }
 

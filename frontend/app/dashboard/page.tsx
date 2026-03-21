@@ -1,14 +1,13 @@
 'use client'
 // app/page.tsx
 import Nav from '@/src/components/NavBar';
-import { Activity, CircleArrowDown, CircleArrowUp, Plus, SquarePen, Trash2, TrendingDown, TrendingUp, Wallet } from 'lucide-react';
+import { Activity, Plus, SquarePen, Trash2, TrendingDown, TrendingUp, Wallet } from 'lucide-react';
 import { getTransactions, addTransaction, deleteTransaction, updateTransaction } from '@/src/app/actions/actions';
 import { useEffect, useState, useRef } from 'react';
 import toast from 'react-hot-toast';
 import { motion, AnimatePresence } from 'motion/react';
 
 export default function Home() {
-  // ─── toute la logique est identique à l'original ───
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -156,7 +155,6 @@ export default function Home() {
     }
   };
 
-  // ─── RENDU ───────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-[#0a0a0f] text-[#f0f0f5] font-['Syne',sans-serif]">
       {/* Noise overlay */}
@@ -188,62 +186,111 @@ export default function Home() {
           transition={{ duration: 0.5, ease: 'easeOut' }}
         >
 
-          {/* ── STATS ─────────────────────────────────────── */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {[
-              {
-                icon: <Wallet className="w-5 h-5" />,
-                label: 'Votre solde',
-                value: `${balance.toFixed(2)} f`,
-                color: 'text-[#f5a623]',
-                border: 'border-[rgba(245,166,35,0.2)]',
-                bg: 'bg-[rgba(245,166,35,0.06)]',
-                iconBg: 'bg-[rgba(245,166,35,0.12)]',
-                iconColor: 'text-[#f5a623]',
-              },
-              {
-                icon: <CircleArrowUp className="w-5 h-5" />,
-                label: 'Revenus',
-                value: `+${income.toFixed(2)} f`,
-                color: 'text-[#22c55e]',
-                border: 'border-[rgba(34,197,94,0.2)]',
-                bg: 'bg-[rgba(34,197,94,0.06)]',
-                iconBg: 'bg-[rgba(34,197,94,0.12)]',
-                iconColor: 'text-[#22c55e]',
-              },
-              {
-                icon: <CircleArrowDown className="w-5 h-5" />,
-                label: 'Dépenses',
-                value: `${expense.toFixed(2)} f`,
-                color: 'text-[#ef4444]',
-                border: 'border-[rgba(239,68,68,0.2)]',
-                bg: 'bg-[rgba(239,68,68,0.06)]',
-                iconBg: 'bg-[rgba(239,68,68,0.12)]',
-                iconColor: 'text-[#ef4444]',
-              },
-            ].map((stat, i) => (
-              <motion.div
-                key={stat.label}
-                className={`rounded-2xl border ${stat.border} ${stat.bg} p-6 flex items-center gap-5 relative overflow-hidden`}
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.4, delay: i * 0.08 }}
-                whileHover={{ y: -2 }}
-              >
-                <div className={`w-12 h-12 rounded-xl ${stat.iconBg} flex items-center justify-center shrink-0 ${stat.iconColor}`}>
-                  {stat.icon}
-                </div>
-                <div>
-                  <div className="text-[#8888a0] text-xs uppercase tracking-widest mb-1">{stat.label}</div>
-                  <div className={`font-['Syne',sans-serif] font-extrabold text-xl md:text-xl ${stat.color}`}>
-                    {stat.value}
+          {/* EN-TÊTE */}
+          <motion.section
+            className="flex flex-col md:flex-row md:items-center md:justify-between gap-4"
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.05 }}
+          >
+            <div className="space-y-1">
+              <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-[#f5a623] to-[#ffc85c]">
+                Tableau de bord
+              </h1>
+              <p className="text-sm md:text-base text-[#8888a0]">
+                Suivez vos revenus et dépenses en temps réel.
+              </p>
+            </div>
+
+            <motion.div
+              className="flex items-center gap-2 text-xs md:text-sm text-[#8888a0]"
+              initial={{ opacity: 0, x: 10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.4, delay: 0.1 }}
+            >
+              <Activity className="w-4 h-4 text-[#f5a623]" />
+              <span>{new Date().toLocaleDateString('fr-FR', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+            </motion.div>
+          </motion.section>
+
+          {/* STATS */}
+          <div className="grid gap-4 md:grid-cols-3">
+            {/* Solde */}
+            <motion.div
+              className="rounded-2xl border border-[rgba(245,166,35,0.12)] bg-[#111118] p-6 hover:border-[rgba(245,166,35,0.25)] transition-all duration-300"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.4 }}
+              whileHover={{ y: -4 }}
+            >
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-[#8888a0] uppercase tracking-widest">Votre solde</span>
+                  <div className="rounded-full p-2.5 bg-[rgba(245,166,35,0.1)] border border-[rgba(245,166,35,0.2)]">
+                    <Wallet className="w-4 h-4 text-[#f5a623]" />
                   </div>
                 </div>
-              </motion.div>
-            ))}
+                <p className={`text-3xl font-bold ${balance >= 0 ? 'text-[#22c55e]' : 'text-[#ef4444]'}`}>
+                  {balance >= 0 ? '+' : ''}{balance.toFixed(2)} FCFA
+                </p>
+                <p className="text-xs text-[#8888a0]">
+                  Différence revenus - dépenses
+                </p>
+              </div>
+            </motion.div>
+
+            {/* Revenus */}
+            <motion.div
+              className="rounded-2xl border border-[rgba(245,166,35,0.12)] bg-[#111118] p-6 hover:border-[rgba(245,166,35,0.25)] transition-all duration-300"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.3 }}
+              whileHover={{ y: -4 }}
+            >
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-[#8888a0] uppercase tracking-widest">Total revenus</span>
+                  <div className="rounded-full p-2.5 bg-[rgba(34,197,94,0.1)] border border-[rgba(34,197,94,0.2)]">
+                    <TrendingUp className="w-4 h-4 text-[#22c55e]" />
+                  </div>
+                </div>
+                <p className="text-3xl font-bold text-[#22c55e]">
+                  +{income.toFixed(2)} FCFA
+                </p>
+                <p className="text-xs text-[#8888a0]">
+                  Somme de tous vos revenus
+                </p>
+              </div>
+            </motion.div>
+
+            {/* Dépenses */}
+            <motion.div
+              className="rounded-2xl border border-[rgba(245,166,35,0.12)] bg-[#111118] p-6 hover:border-[rgba(245,166,35,0.25)] transition-all duration-300"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4, delay: 0.35 }}
+              whileHover={{ y: -4 }}
+            >
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-[#8888a0] uppercase tracking-widest">Total dépenses</span>
+                  <div className="rounded-full p-2.5 bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.2)]">
+                    <TrendingDown className="w-4 h-4 text-[#ef4444]" />
+                  </div>
+                </div>
+                <p className="text-3xl font-bold text-[#ef4444]">
+                  {Math.abs(expense).toFixed(2)} FCFA
+                </p>
+                <p className="text-xs text-[#8888a0]">
+                  Somme de toutes vos dépenses
+                </p>
+              </div>
+            </motion.div>
           </div>
 
-          {/* ── PROGRESS BAR ──────────────────────────────── */}
+          {/* TABLEAU STATS */}
+
+          {/* PROGRESS BAR */}
           <motion.div
             className="rounded-2xl border border-[rgba(245,166,35,0.12)] bg-[rgba(245,166,35,0.04)] p-5"
             initial={{ opacity: 0, y: 12 }}
@@ -267,7 +314,7 @@ export default function Home() {
             </div>
           </motion.div>
 
-          {/* ── ACTION BUTTONS ────────────────────────────── */}
+          {/* ACTION BUTTONS */}
           <motion.div
             className="flex flex-wrap gap-3"
             initial={{ opacity: 0, y: 12 }}
@@ -323,7 +370,7 @@ export default function Home() {
             )}
           </motion.div>
 
-          {/* ── TABLE ─────────────────────────────────────── */}
+          {/* TABLE */}
           <motion.div
             className="rounded-2xl border border-[rgba(245,166,35,0.12)] bg-[#111118] overflow-x-auto"
             initial={{ opacity: 0, y: 12 }}
@@ -443,7 +490,7 @@ export default function Home() {
         </motion.div>
       )}
 
-      {/* ── MODAL AJOUT ─────────────────────────────────────── */}
+      {/* MODAL AJOUT */}
       <dialog ref={addModalRef} className="modal backdrop-blur-md">
         <motion.div
           className="modal-box bg-[#111118] border border-[rgba(245,166,35,0.15)] rounded-2xl p-8 max-w-md w-full shadow-[0_32px_64px_rgba(0,0,0,0.6)]"
@@ -476,7 +523,7 @@ export default function Home() {
               <datalist id="desc">
                 <option value="Salaire">Salaire</option>
                 <option value="Loyer">Loyer</option>
-                <option value="Cours">Cours</option>
+                <option value="Courses">Courses</option>
                 <option value="Abonnement">Abonnement</option>
               </datalist>
             </div>
@@ -507,7 +554,7 @@ export default function Home() {
         <form method="dialog" className="modal-backdrop"><button>Fermer</button></form>
       </dialog>
 
-      {/* ── MODAL MODIFICATION ──────────────────────────────── */}
+      {/* MODAL MODIFICATION */}
       <dialog ref={editModalRef} className="modal backdrop-blur-md">
         <motion.div
           className="modal-box bg-[#111118] border border-[rgba(245,166,35,0.15)] rounded-2xl p-8 max-w-md w-full shadow-[0_32px_64px_rgba(0,0,0,0.6)]"
@@ -546,7 +593,7 @@ export default function Home() {
               <datalist id="desc">
                 <option value="Salaire">Salaire</option>
                 <option value="Loyer">Loyer</option>
-                <option value="Cours">Cours</option>
+                <option value="Cours">Courses</option>
                 <option value="Abonnement">Abonnement</option>
               </datalist>
             </div>
@@ -578,7 +625,7 @@ export default function Home() {
         <form method="dialog" className="modal-backdrop"><button>Fermer</button></form>
       </dialog>
 
-      {/* ── MODAL SUPPRESSION ───────────────────────────────── */}
+      {/* MODAL SUPPRESSION */}
       <dialog ref={deleteModalRef} className="modal backdrop-blur-md">
         <motion.div
           className="modal-box bg-[#111118] border border-[rgba(239,68,68,0.2)] rounded-2xl p-8 max-w-md w-full shadow-[0_32px_64px_rgba(0,0,0,0.6)]"

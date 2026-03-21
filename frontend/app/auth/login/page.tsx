@@ -22,8 +22,12 @@ export default function LoginPage() {
       await axios.post('/api/login/', data);
       router.push(ROUTES.DASHBOARD.ROOT);
       router.refresh();
-    } catch (err) {
-      toast.error("Erreur de connexion");
+    } catch (err: any) {
+      if(err?.response?.status === 401){
+        toast.error(err?.response?.data.error);
+      }else{
+        toast.error("Problème de connexion au serveur");
+      }
     } finally {
       setLoading(false);
     }

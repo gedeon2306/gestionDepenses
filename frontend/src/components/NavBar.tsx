@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from 'motion/react';
 
 export default function Nav() {
   const router = useRouter();
+  const [loading, setLoading] = useState(false)
   const [userName, setUserName] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -36,12 +37,15 @@ export default function Nav() {
   }, []);
 
   const handleLogout = async () => {
+    setLoading(true)
     try {
       await axios.post('/api/logout');
       router.push(ROUTES.HOME);
       router.refresh();
     } catch (error) {
       console.error("Erreur lors de la déconnexion", error);
+    } finally {
+      setLoading(false)
     }
   };
 
@@ -81,7 +85,7 @@ export default function Nav() {
               onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
             />
           </div>
-          <span className="font-['DM_Sans',sans-serif] text-sm font-medium text-[#f0f0f5] max-w-[120px] truncate hidden sm:block">
+          <span className="font-['DM_Sans',sans-serif] text-sm font-medium text-[#f0f0f5] max-w-30 truncate hidden sm:block">
             {userName ?? 'Chargement…'}
           </span>
           <motion.div
@@ -142,15 +146,31 @@ export default function Nav() {
                   </span>
                 </Link>
 
+                <Link
+                  href={ROUTES.DASHBOARD.RAPPORT}
+                  onClick={() => setOpen(false)}
+                  className="flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl text-[#8888a0] text-sm hover:text-[#f0f0f5] hover:bg-[#1e1e28] transition-all duration-150 no-underline"
+                >
+                  <span className="flex items-center gap-3">
+                    <User className="w-4 h-4 shrink-0" />
+                    Rapports
+                  </span>
+                  <span className="text-[0.6rem] font-semibold px-1.5 py-0.5 rounded-full bg-[rgba(245,166,35,0.15)] text-[#f5a623] border border-[rgba(245,166,35,0.2)]">
+                    Nouveau
+                  </span>
+                </Link>
+
                 <div className="h-px bg-[rgba(255,255,255,0.05)] my-1 mx-2" />
 
                 <motion.button
                   onClick={handleLogout}
+                  disabled={loading}
                   className="flex items-center gap-3 w-full px-3 py-2.5 rounded-xl text-[#ef4444] text-sm hover:bg-[rgba(239,68,68,0.08)] transition-all duration-150 text-left"
                   whileTap={{ scale: 0.98 }}
                 >
-                  <LogOut className="w-4 h-4 shrink-0" />
-                  Déconnexion
+                  {loading 
+                    ? <><motion.div className="w-4 h-4 rounded-full border-2 border-[#ef4444] border-t-transparent" animate={{ rotate: 360 }} transition={{ duration: 0.7, repeat: Infinity, ease: 'linear' }} /> Déconnexion…</>
+                    : <><LogOut className="w-4 h-4" /> Déconnexion</>}
                 </motion.button>
               </div>
             </motion.div>

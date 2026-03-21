@@ -1,22 +1,85 @@
 'use client'
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
-import { permanentRedirect } from 'next/navigation';
 import { Lock, ShieldCheck } from 'lucide-react';
 import { motion } from 'motion/react';
 
 export default function ResetPasswordPage() {
+  const [password, setPassword] = useState('');
+  const [passwordConfirm, setPasswordConfirm] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isValid, setIsValid] = useState(false);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const uid = searchParams.get('uid');
+  const token = searchParams.get('token');
 
-  const traitement = () => {
+  useEffect(() => {
+    if (!uid || !token) {
+      toast.error('Lien invalide ou expiré');
+      setTimeout(() => router.push('/auth/forgot-password'), 2000);
+      setIsValid(false);
+    } else {
+      setIsValid(true);
+    }
+  }, [uid, token, router]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!password || !passwordConfirm) {
+      toast.error('Veuillez remplir tous les champs');
+      return;
+    }
+
+    if (password !== passwordConfirm) {
+      toast.error('Les mots de passe ne correspondent pas');
+      return;
+    }
+
+    if (password.length < 8) {
+      toast.error('Le mot de passe doit contenir au moins 8 caractères');
+      return;
+    }
+
     setLoading(true);
-    setTimeout(() => {
-      toast.success('Mot de passe réinitialisé');
-      setTimeout(() => {
-        permanentRedirect('/');
-      }, 1500);
-    }, 3000);
+    try {
+      const response = await fetch('/api/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          uid,
+          token,
+          password,
+          password_confirm: passwordConfirm,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success('Mot de passe réinitialisé avec succès !');
+        setTimeout(() => router.push('/auth/login'), 1500);
+      } else {
+        toast.error(data.error || 'Erreur lors de la réinitialisation');
+      }
+    } catch (error) {
+      toast.error('Erreur de connexion au serveur');
+    } finally {
+      setLoading(false);
+    }
   };
+
+  if (!isValid) {
+    return (
+      <main className="min-h-screen bg-[#0a0a0f] flex items-center justify-center px-4 relative overflow-hidden font-['Syne',sans-serif]">
+        <div className="relative z-10 text-center">
+          <p className="text-[#8888a0]">Redirection en cours...</p>
+        </div>
+      </main>
+    );
+  }
 
   return (
     <main className="min-h-screen bg-[#0a0a0f] flex items-center justify-center px-4 relative overflow-hidden font-['Syne',sans-serif]">
@@ -82,6 +145,8 @@ export default function ResetPasswordPage() {
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8888a0] pointer-events-none" />
                 <input
                   type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
                   className="w-full bg-[#17171f] border border-[rgba(245,166,35,0.12)] rounded-xl pl-10 pr-4 py-3 text-sm text-[#f0f0f5] placeholder:text-[#8888a0]
@@ -99,6 +164,8 @@ export default function ResetPasswordPage() {
                 <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#8888a0] pointer-events-none" />
                 <input
                   type="password"
+                  value={passwordConfirm}
+                  onChange={(e) => setPasswordConfirm(e.target.value)}
                   placeholder="••••••••"
                   required
                   className="w-full bg-[#17171f] border border-[rgba(245,166,35,0.12)] rounded-xl pl-10 pr-4 py-3 text-sm text-[#f0f0f5] placeholder:text-[#8888a0]
@@ -109,8 +176,8 @@ export default function ResetPasswordPage() {
 
             {/* Submit */}
             <motion.button
+              onClick={handleSubmit}
               disabled={loading}
-              onClick={traitement}
               className="flex items-center justify-center gap-2 w-full py-3 mt-1 rounded-xl bg-[#f5a623] text-black font-['DM_Sans',sans-serif] font-semibold text-sm
                          hover:bg-[#ffc85c] hover:shadow-[0_6px_24px_rgba(245,166,35,0.35)] transition-all duration-200 disabled:opacity-60"
               whileHover={{ y: -1 }}

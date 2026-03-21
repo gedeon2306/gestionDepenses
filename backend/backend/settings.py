@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 from pathlib import Path
 import os
 import environ
+import ssl
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -96,6 +97,10 @@ SIMPLE_JWT = {
 
 AUTH_USER_MODEL = 'api.User'
 
+# Durée de validité des tokens de confirmation d'email (en secondes)
+# 600 secondes = 10 minutes
+PASSWORD_RESET_TIMEOUT = 600
+
 ROOT_URLCONF = 'backend.urls'
 
 TEMPLATES = [
@@ -168,3 +173,23 @@ STATICFILES_DIRS = [
 ]
 # En production, on collect tous les fichiers statiques dans un dossier unique
 # STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+EMAIL_SSL_CERTFILE = "/path/to/CERTFILE.crt"
+EMAIL_SSL_KEYFILE = "/path/to/private/KEYFILE.key" # make sure it is accessible by the executing user
+CA_PATH = '/path/to/cert/folder/' # e.g. '/etc/ssl/certs/' on ubuntu linux - this one is new 
+
+# Configuration de l'email
+EMAIL_BACKEND = 'api.backends.custom_email_backend.CustomEmailBackend'
+EMAIL_HOST = env('EMAIL_HOST')
+EMAIL_PORT = env('EMAIL_PORT')
+EMAIL_USE_SSL = True
+EMAIL_USE_TLS = False
+EMAIL_HOST_USER = env('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = env('EMAIL_HOST_PASSWORD')
+EMAIL_CHECK_HOSTNAME = False
+EMAIL_VERIFY_MODE = ssl.CERT_NONE
+
+# URL du frontend (utilisée pour les redirections après confirmation d'email)
+# Exemple dans le .env :
+# FRONTEND_URL=http://localhost:3000
+FRONTEND_URL = env("FRONTEND_URL", default="http://localhost:3000")

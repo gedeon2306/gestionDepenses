@@ -11,18 +11,40 @@ import { motion } from 'motion/react';
 export default function RegisterPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [password, setPassword] = useState('');
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    if (password.length < 8) {
+      toast.error('Le mot de passe doit contenir au moins 8 caractères');
+      return;
+    }
+
     setLoading(true);
+
     const formData = new FormData(e.currentTarget);
     const data = Object.fromEntries(formData);
+
     try {
       await axios.post('/api/register', data);
-      router.push(ROUTES.DASHBOARD.ROOT);
+
+      const email = formData.get('email') as string;
+      const action = 'inscription';
+      router.push(`${ROUTES.AUTH.EMAIL_SEND}?email=${encodeURIComponent(email)}&action=${action}`);
       router.refresh();
     } catch (err: any) {
-      toast.error(err.response?.data?.email || "Une erreur est survenue");
+      if (err?.response?.status === 400) {
+        if(err?.response?.data?.email && err?.response?.data?.email == "user with this email already exists."){
+          toast.error("Cet email est déjà utilisé");
+        } else if(err?.response?.data?.email) {
+          toast.error(err?.response?.data?.email);
+        }else{
+          toast.error(err?.response?.data?.error);
+        }
+      } else {
+        toast.error("Problème de connexion au serveur");
+      }
     } finally {
       setLoading(false);
     }
@@ -127,6 +149,7 @@ export default function RegisterPage() {
                 <input
                   name="password"
                   type="password"
+                  onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   required
                   className="w-full bg-[#17171f] border border-[rgba(245,166,35,0.12)] rounded-xl pl-10 pr-4 py-3 text-sm text-[#f0f0f5] placeholder:text-[#8888a0]
