@@ -53,18 +53,36 @@ def register_user(request):
             {"error": "Le mot de passe doit contenir au moins 8 caractères."},
             status=status.HTTP_400_BAD_REQUEST
         )
+    
+    email_user = request.data.get('email', '').strip()
 
+    if not email_user:
+        return Response({"email": "L'email est obligatoire."}, status=status.HTTP_400_BAD_REQUEST)
+
+    # 1. Gestion de l'utilisateur existant
+    user = User.objects.filter(email=email_user).first()
+
+    if user:
+        if not user.is_active:
+            send_confirmation_email(user)
+            return Response({
+                "message": "Vérifie ta boîte mail pour confirmer ton inscription.",
+                "user": {"email": user.email, "name": user.name}
+            }, status=status.HTTP_200_OK)
+        
+        return Response({"message": "Cet utilisateur est déjà actif."}, status=status.HTTP_400_BAD_REQUEST)
+
+    # 2. Création du nouvel utilisateur
     serializer = UserSerializer(data=request.data)
     if serializer.is_valid():
         user = serializer.save()
-
-        # Envoi de l'email de confirmation via la fonction utilitaire
         send_confirmation_email(user)
-
         return Response({
             "message": "Utilisateur créé ! Vérifie ta boîte mail pour confirmer ton inscription.",
             "user": {"email": user.email, "name": user.name}
         }, status=status.HTTP_201_CREATED)
+
+    # 3. Retour des erreurs de validation (ex: mot de passe trop court, name manquant, etc.)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 

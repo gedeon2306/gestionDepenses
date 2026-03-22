@@ -7,8 +7,8 @@ export function middleware(request: NextRequest) {
     const token = request.cookies.get('access_token');
     const { pathname } = request.nextUrl;
 
-    // 2. Si l'utilisateur n'est pas connecté et essaie d'aller sur la dashboard ou le profile
-    if (!token && (pathname === ROUTES.DASHBOARD.ROOT || pathname === ROUTES.DASHBOARD.USER_PROFILE)) {
+    // 2. Si l'utilisateur n'est pas connecté et essaie d'aller sur la dashboard ou le profile ou rapport
+    if (!token && (pathname === ROUTES.DASHBOARD.ROOT || pathname === ROUTES.DASHBOARD.USER_PROFILE || pathname === ROUTES.DASHBOARD.RAPPORT)) {
         return NextResponse.redirect(new URL(ROUTES.AUTH.LOGIN, request.url));
     }
 
@@ -32,5 +32,5 @@ export function middleware(request: NextRequest) {
 
 // On définit les routes à surveiller
 export const config = {
-    matcher: ['/dashboard', '/dashboard/profile', '/auth/login', '/auth/register', '/auth/reset-password', '/auth/forgot-password' ],
+    matcher: ['/dashboard', '/dashboard/profile', '/dashboard/rapport/', '/auth/login', '/auth/register', '/auth/reset-password', '/auth/forgot-password', '/auth/confirm', '/auth/email-send' ],
 };
