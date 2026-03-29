@@ -11,7 +11,7 @@ class UserManager(BaseUserManager):
 
         # 2) On crée l'instance d'utilisateur SANS l'enregistrer
         user = self.model(
-            email=self.normalize_email(email),
+            email=self.normalize_email(email).lower(),
             name=name,
         )
 

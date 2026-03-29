@@ -54,7 +54,7 @@ def register_user(request):
             status=status.HTTP_400_BAD_REQUEST
         )
     
-    email_user = request.data.get('email', '').strip()
+    email_user = request.data.get('email', '').strip().lower()
 
     if not email_user:
         return Response({"email": "L'email est obligatoire."}, status=status.HTTP_400_BAD_REQUEST)
@@ -613,6 +613,12 @@ def monthly_summary(request):
     if not month or not year:
         return Response(
             {"error": "Les champs 'month' et 'year' sont obligatoires."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    if not (1 <= int(month) <= 12):
+        return Response(
+            {"error": "'month' doit être un entier entre 1 et 12."},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
