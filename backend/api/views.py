@@ -54,7 +54,7 @@ def register_user(request):
             status=status.HTTP_400_BAD_REQUEST
         )
     
-    email_user = request.data.get('email', '').strip()
+    email_user = request.data.get('email', '').strip().lower()
 
     if not email_user:
         return Response({"email": "L'email est obligatoire."}, status=status.HTTP_400_BAD_REQUEST)
