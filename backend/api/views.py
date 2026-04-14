@@ -289,10 +289,10 @@ def password_confirm(request, uidb64, token):
 
     # 2) Vérification du token
     if user is not None and not email_confirmation_token_generator.check_token(user, token):
-        return Response(
-            {"error": "Le lien de réinitialisation est invalide ou a expiré."},
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        return Response({
+            "error": "Le lien de réinitialisation est invalide ou a expiré.",
+            "email": user.email
+        }, status=status.HTTP_400_BAD_REQUEST)
 
     if user is None:
         return Response({"error": "Lien de confirmation invalide ou expiré."}, status=status.HTTP_400_BAD_REQUEST)
