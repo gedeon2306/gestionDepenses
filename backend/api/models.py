@@ -10,10 +10,8 @@ class UserManager(BaseUserManager):
             raise ValueError("L'email est obligatoire")
 
         # 2) On crée l'instance d'utilisateur SANS l'enregistrer
-        user = self.model(
-            email=self.normalize_email(email).lower(),
-            name=name,
-        )
+        email = self.normalize_email(email).lower()
+        user = self.model(email=email, name=name)
 
         # 3) On hache le mot de passe
         user.set_password(password)
