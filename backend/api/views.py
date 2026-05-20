@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.conf import settings
 from django.utils.encoding import force_bytes, force_str
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+from django.contrib.auth.models import BaseUserManager
 from .tokens import email_confirmation_token_generator
 from django.core.mail import send_mail
 from .email_utils import send_confirmation_email, send_password_reset_email
@@ -521,6 +522,9 @@ def get_user_profile(request):
         serializer = UserSerializer(request.user, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
+            user = request.user
+            user.email = BaseUserManager.normalize_email(user.email).lower()
+            user.save()
             return Response({ "id": request.user.id, "name": request.user.name, "email": request.user.email })
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
